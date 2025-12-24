@@ -3,4 +3,4 @@
 
 
 
-void IIC_Init();
+HAL_StatusTypeDef IIC_Init();

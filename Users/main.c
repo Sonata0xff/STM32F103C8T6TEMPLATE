@@ -8,5 +8,15 @@ int main()
 	HAL_Init();
 	//standard process end
 	
+	//test code
+	testFunc();
+	//test code end
+	HAL_StatusTypeDef ret = IIC_Init();
+	if (ret == HAL_OK) {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	} else {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+	}
+	while(1);
 	return 0;
 }

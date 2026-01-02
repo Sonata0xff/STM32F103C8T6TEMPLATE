@@ -1,21 +1,24 @@
 #include "IIC.h"
 
-static const uint32_t clk_freq = 200000; //200kHz
-static const uint32_t masterAddr = 0; // OwnAddress
+//I2C1 is sneder, I2C2 is receiver.
+
+static const uint32_t clk_freq = 200000; //default clock speed 200kHz
+static const uint32_t self_addr = 0; //default self address SelfAddress
 
 
 //basic iic info
-I2C_HandleTypeDef iic_config = {
+I2C_HandleTypeDef iic1_config = {
 		.Instance = I2C1,
 		.Init.ClockSpeed = clk_freq,
 		.Init.DutyCycle = I2C_DUTYCYCLE_2,
-		.Init.OwnAddress1 = masterAddr,
+		.Init.OwnAddress1 = self_addr,
 		.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT,
 		.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE,
-		.Init.OwnAddress2 = masterAddr,
+		.Init.OwnAddress2 = self_addr,
 		.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE,
 		.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE,
-		.State = HAL_I2C_STATE_RESET
+		.State = HAL_I2C_STATE_RESET,
+		.Mode = HAL_I2C_MODE_MASTER
 };
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
@@ -49,17 +52,24 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 // it func
 void I2C1_EV_IRQHandler()
 {
-	HAL_I2C_EV_IRQHandler(&iic_config);
+	HAL_I2C_EV_IRQHandler(&iic1_config);
 }
 void I2C1_ER_IRQHandler()
 {
-	HAL_I2C_ER_IRQHandler(&iic_config);
+	HAL_I2C_ER_IRQHandler(&iic1_config);
 }
 
-HAL_StatusTypeDef IIC_Init()
+HAL_StatusTypeDef IIC1_Init(uint32_t clkFreq, uint32_t selfAddr)
 {
 	//CLOCK int
 	__HAL_RCC_I2C1_CLK_ENABLE();
 	//I2C init
-	return HAL_I2C_Init(&iic_config);
+	iic1_config.Init.ClockSpeed = clkFreq == 0 ? clk_freq : clkFreq;
+	iic1_config.Init.OwnAddress1 = selfAddr == 0 ? self_addr : selfAddr;
+	return HAL_I2C_Init(&iic1_config);
+}
+
+HAL_StatusTypeDef IIC1Send1Byte(char* value, int size, uint16_t addr)
+{
+	return HAL_I2C_Master_Transmit_IT(&iic1_config, addr, (unsigned char*)value, size);
 }

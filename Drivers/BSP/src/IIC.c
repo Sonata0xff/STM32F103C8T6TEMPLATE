@@ -4,6 +4,7 @@
 
 static const uint32_t clk_freq = 200000; //default clock speed 200kHz
 static const uint32_t self_addr = 0; //default self address SelfAddress
+static uint8_t I2C1_SEND_FIN = 0;// not 0 means send finished.
 
 
 //basic iic info
@@ -72,4 +73,15 @@ HAL_StatusTypeDef IIC1_Init(uint32_t clkFreq, uint32_t selfAddr)
 HAL_StatusTypeDef IIC1SendBytes(char* value, int size, uint16_t addr)
 {
 	return HAL_I2C_Master_Transmit_IT(&iic1_config, addr, (unsigned char*)value, size);
+}
+//This will only be activated by I2C1 master send finish.
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	I2C1_SEND_FIN = 1;
+}
+
+void IIC1_Send_Block_Wait()
+{
+	while(I2C1_SEND_FIN == 0);
+	if (I2C1_SEND_FIN != 0) I2C1_SEND_FIN = 0;
 }

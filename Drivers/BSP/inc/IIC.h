@@ -9,4 +9,6 @@
 //2.selfAddr : self master address, default is 0. 
 HAL_StatusTypeDef IIC1_Init(uint32_t clkFreq, uint32_t selfAddr);
 HAL_StatusTypeDef IIC1SendBytes(char* value, int size, uint16_t addr);
+//block wait until IIC1 finish sending.
+void IIC1_Send_Block_Wait();
 #endif

@@ -11,14 +11,15 @@ int main()
 	//start IIC master sneder
 	IIC1_Init(0, 0);
 	
-	//init OLED
+	
 	OLED_Init();
 	
-	//OLED_TurnOn_Screen();
 	
-	//HAL_Delay(1000);
+	OLED_TurnOn_Screen();
 	
-	//OLED_Flash_Screen(' ');
+	HAL_Delay(1000);
+	
+	OLED_Flash_Screen(0x00);
 	
 	while(1);
 	return 0;

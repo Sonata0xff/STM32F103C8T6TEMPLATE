@@ -5,7 +5,7 @@ unsigned char ScreenOn = 0; // 0 means off
 
 void OLED_Init() // mainly  focus on screen setting
 {
-	int startCommandsSize = 14;
+	int startCommandsSize = 13;
 	char startCommands[] = {
 		0x00,//send controll byte
 		0xae,// turn off screeen
@@ -19,11 +19,10 @@ void OLED_Init() // mainly  focus on screen setting
 		0x00,//set low 4bits of start col
 		0x10,//set high 4bits of start col
 		0x8d,//standard process 1 before start
-		0x14,//standard process 2 before start
-		0xaf
+		0x14//standard process 2 before start
 	};
 	IIC1SendBytes(startCommands, startCommandsSize, OLED_addr);
-	while(1);
+	IIC1_Send_Block_Wait();
 	return;
 }
 void OLED_TurnOn_Screen()
@@ -35,6 +34,7 @@ void OLED_TurnOn_Screen()
 		0xaf// turn on command
 	};
 	HAL_StatusTypeDef ret = IIC1SendBytes(commands, commandsSize, OLED_addr);
+	IIC1_Send_Block_Wait();
 	if (ret == HAL_OK) ScreenOn = 1;
 }
 void OLED_TurnOff_Screen()
@@ -46,6 +46,7 @@ void OLED_TurnOff_Screen()
 		0xae// turn off command
 	};
 	HAL_StatusTypeDef ret = IIC1SendBytes(commands, commandsSize, OLED_addr);
+	IIC1_Send_Block_Wait();
 	if (ret == HAL_OK) ScreenOn = 0;
 }
 void OLED_Flash_Screen(unsigned char val)// flash the screen with value 'val'
@@ -60,11 +61,13 @@ void OLED_Flash_Screen(unsigned char val)// flash the screen with value 'val'
 			0x10,
 		};
 		IIC1SendBytes(commands1, commands1Size, OLED_addr);
+		IIC1_Send_Block_Wait();
 		int command2Size = 129;
 		char commmands2[command2Size];
 		commmands2[0] = 0x40;
 		for (int j = 0; j < 128; ++j) commmands2[j+1] = val;
 		IIC1SendBytes(commmands2, command2Size, OLED_addr);
+		IIC1_Send_Block_Wait();
 	}
 }
 void OLED_Write1Byte(unsigned char v128, unsigned char v64, unsigned char val)// write a colunm

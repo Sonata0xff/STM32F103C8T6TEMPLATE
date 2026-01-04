@@ -69,7 +69,7 @@ HAL_StatusTypeDef IIC1_Init(uint32_t clkFreq, uint32_t selfAddr)
 	return HAL_I2C_Init(&iic1_config);
 }
 
-HAL_StatusTypeDef IIC1Send1Byte(char* value, int size, uint16_t addr)
+HAL_StatusTypeDef IIC1SendBytes(char* value, int size, uint16_t addr)
 {
 	return HAL_I2C_Master_Transmit_IT(&iic1_config, addr, (unsigned char*)value, size);
 }

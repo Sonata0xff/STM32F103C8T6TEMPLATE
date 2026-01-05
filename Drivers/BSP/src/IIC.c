@@ -1,5 +1,6 @@
 #include "IIC.h"
 
+#ifdef IIC_API_EN
 //I2C1 is sneder, I2C2 is receiver.
 
 static const uint32_t clk_freq = 200000; //default clock speed 200kHz
@@ -85,3 +86,5 @@ void IIC1_Send_Block_Wait()
 	while(I2C1_SEND_FIN == 0);
 	if (I2C1_SEND_FIN != 0) I2C1_SEND_FIN = 0;
 }
+
+#endif

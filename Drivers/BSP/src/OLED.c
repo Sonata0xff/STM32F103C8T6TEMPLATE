@@ -1,4 +1,5 @@
 #include "OLED.h"
+#ifdef OLED_API_EN
 #include "IIC.h"
 uint16_t OLED_addr = 0x0078;
 unsigned char ScreenOn = 0; // 0 means off
@@ -278,7 +279,7 @@ void OLED_Write1Byte(unsigned char v128, unsigned char v8, unsigned char val)// 
 		downHalf,//set col addr low bits
 		upHalf// set col addr high bits
 	};
-	int commands2Size = 1;
+	int commands2Size = 2;
 	char commands2[] = {
 		0x40,//send data byte
 		val//send data
@@ -297,7 +298,7 @@ void OLED_WriteIn_16x8Char(unsigned char v128, unsigned char v8, unsigned char v
 	v8 += 0xb0;
 	unsigned char upHalf = ((v128 >> 4) + 0x10);
 	unsigned char downHalf = v128 & 0x0f;
-	int commands1Size = 1;
+	int commands1Size = 4;
 	char commands1[] = {
 		0x00,//controll byte
 		v8,//set page order
@@ -322,5 +323,69 @@ void OLED_WriteIn_16x8Char(unsigned char v128, unsigned char v8, unsigned char v
 }
 void OLED_WriteIn_16x8String(unsigned char v128, unsigned char v8, int len, unsigned char val[]) // write a string , each char's size is 16x8
 {
+	if (ScreenOn == 0) return;
+	if (v8 >= 4 || v128 >= 16) return;
+	int pos = 16 * v8 + v128;
+	v8 *= 2;
+	unsigned char tmpv8 = v8;
+	unsigned char tmpv128 = v128;
+	v128 *= 8;
+	unsigned char upHalf = ((v128 >> 4) + 0x10);
+	unsigned char downHalf = v128 & 0x0f;
 	
+	int commands1Size = 4;
+	char commands1[] = {
+		0x00,//send controll bytes
+		tmpv8 + 0xb0,//set page order
+		downHalf,//set col addr low bits
+		upHalf//set col addr high bits
+	};
+	
+	int commands2Size = 9;
+	char commands2[commands2Size];
+	commands2[0] = 0x40;//send data byte
+	
+	IIC1SendBytes(commands1, commands1Size, OLED_addr);
+	IIC1_Send_Block_Wait();
+	
+	for (int i = 0; i < len && i < 64 - pos; ++i) {
+		if (tmpv128 >= 16) {
+			tmpv128 = 0;
+			tmpv8 += 2;
+			commands1[1] = tmpv8 + 0xb0;
+			commands1[2] = 0x10;
+			commands1[3] = 0x00;
+			IIC1SendBytes(commands1, commands1Size, OLED_addr);
+			IIC1_Send_Block_Wait();
+		}
+		for (int j = 0; j < 8; ++j) commands2[j + 1] = OLED_F8x16[val[i] - 32][j];
+		IIC1SendBytes(commands2, commands2Size, OLED_addr);
+		IIC1_Send_Block_Wait();
+		tmpv128++;
+	}
+	
+	tmpv8 = v8 + 1;
+	tmpv128 = v128 / 8;
+	commands1[1] = tmpv8 + 0xb0;
+	commands1[2] = downHalf;
+	commands1[3] = upHalf;
+	IIC1SendBytes(commands1, commands1Size, OLED_addr);
+	IIC1_Send_Block_Wait();
+	
+	for (int i = 0; i < len && i < 64 - pos; ++i) {
+		if (tmpv128 >= 16) {
+			tmpv128 = 0;
+			tmpv8 += 2;
+			commands1[1] = tmpv8 + 0xb0;
+			commands1[2] = 0x10;
+			commands1[3] = 0x00;
+			IIC1SendBytes(commands1, commands1Size, OLED_addr);
+			IIC1_Send_Block_Wait();
+		}
+		for (int j = 8; j < 16; ++j) commands2[j - 7] = OLED_F8x16[val[i] - 32][j];
+		IIC1SendBytes(commands2, commands2Size, OLED_addr);
+		IIC1_Send_Block_Wait();
+		tmpv128++;
+	}
 }
+#endif

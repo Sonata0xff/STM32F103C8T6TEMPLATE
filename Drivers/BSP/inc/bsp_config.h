@@ -3,7 +3,8 @@
 #ifndef BSP_CONFIG_H
 #define BSP_CONFIG_H
 
-#define IIC_API_EN
-#define OLED_API_EN
+//#define IIC_API_EN
+//#define OLED_API_EN
+#define ISPI_API_EN
 
 #endif

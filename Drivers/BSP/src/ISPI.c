@@ -1,6 +1,12 @@
 #include "ISPI.h"
 
 #ifdef ISPI_API_EN
+
+static uint8_t ISPI_MASTER_SEND_FIN = 0;//0 means send finished.
+static uint8_t ISPI_MASTER_RECV_FIN = 0;//0 means recv finished.
+static uint8_t NSS_Line[16]; // nss line
+static uint8_t NSS_LineSize = 0;//nss line num
+static GPIO_TypeDef* Nss_Group = GPIOA;
 /*
 SPI1 will be matser, SPI2 will be the slave
 */
@@ -8,7 +14,7 @@ SPI_HandleTypeDef spi1_config = {
 		.Instance = SPI1,
 		.Init.Mode = SPI_MODE_MASTER,
 		.Init.Direction = SPI_DIRECTION_2LINES,
-		.Init.DataSize = SPI_DATASIZE_8BIT, //This need to be explosed to the user.
+		.Init.DataSize = SPI_DATASIZE_8BIT,
 		.Init.NSS = SPI_NSS_SOFT,
 		.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32,// 2Mhz, This need tobe explosed to the user.
 		.Init.FirstBit = SPI_FIRSTBIT_MSB, // This need to be explosed to the user.
@@ -30,13 +36,124 @@ void ISPI1_Init()
 // surrounding device init coding ...
 void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
-		//GPIO Init
-	
-		//NVIC Init
+		/*
+		PA4 = NSS
+		PA5 = SCK
+		PA6 = MISO
+		PA7 = MOSI
+		*/
 		
+		//GPIO Init
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+	
+		//SCK Init
+		GPIO_InitTypeDef io_config = {
+			.Pin = GPIO_PIN_5,
+			.Mode = GPIO_MODE_AF_PP,
+			.Speed = GPIO_SPEED_FREQ_MEDIUM,
+			.Pull = GPIO_NOPULL
+		};
+		HAL_GPIO_Init(GPIOA, &io_config);
+		
+		//MOSI Init
+		io_config.Pin = GPIO_PIN_7;
+		HAL_GPIO_Init(GPIOA, &io_config);
+		
+		//MISO Init
+		io_config.Pin = GPIO_PIN_6;
+		io_config.Mode = GPIO_MODE_INPUT;
+		io_config.Pull = GPIO_PULLUP;
+		HAL_GPIO_Init(GPIOA, &io_config);
+		
+		//NSS Now ti's one. It wiil be explosed to the user.
+		io_config.Pin = GPIO_PIN_4;
+		io_config.Mode = GPIO_MODE_OUTPUT_PP;
+		io_config.Pull = GPIO_NOPULL;
+		HAL_GPIO_Init(GPIOA, &io_config);
+		
+		
+		//NVIC Init
+		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+		HAL_NVIC_SetPriority(SPI1_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(SPI1_IRQn);
 }
 
+HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
+{
+	ISPI_Comm_Block_Wait();
+	ISPI_MASTER_SEND_FIN = 1;
+	return HAL_SPI_Transmit_IT(&spi1_config, val, size);
+}
 
+HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* recvPacks, int size)
+{
+	ISPI_Comm_Block_Wait();
+	ISPI_MASTER_SEND_FIN = 1;
+	ISPI_MASTER_RECV_FIN = 1;
+	return HAL_SPI_TransmitReceive_IT(&spi1_config,
+																		sendPacks, recvPacks, size);
+}
+
+HAL_StatusTypeDef ISPI1_RecvBytes(unsigned char* recvPacks, int size)
+{
+	ISPI_Comm_Block_Wait();
+	ISPI_MASTER_RECV_FIN = 1;
+	return HAL_SPI_Receive_IT(&spi1_config, recvPacks, size);
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	ISPI_MASTER_SEND_FIN = 0;
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	ISPI_MASTER_RECV_FIN = 0;
+}
+
+void ISPI1_NSS_Init(GPIO_TypeDef* gpioG, uint32_t* Pin, unsigned char size)
+{
+	if (size > 16) return;
+	else NSS_LineSize = size;
+	if (gpioG == 0) return;
+	else Nss_Group = gpioG;
+	GPIO_InitTypeDef io_config = {
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_MEDIUM
+	};
+	for (unsigned char i = 0; i < NSS_LineSize; i++) {
+		NSS_Line[i] = Pin[i];
+		io_config.Pin = NSS_Line[i];
+		HAL_GPIO_Init(Nss_Group, &io_config);
+		HAL_GPIO_WritePin(Nss_Group, NSS_Line[i], GPIO_PIN_SET);
+	}
+}
+
+void ISPI1_SelectDevice(int pos)
+{
+	if (pos >= NSS_LineSize) return;
+	HAL_GPIO_WritePin(Nss_Group, NSS_Line[pos], GPIO_PIN_RESET);
+}
+
+void ISPI1_UnSelectDevice(int pos)
+{
+	if (pos >= NSS_LineSize) return;
+	HAL_GPIO_WritePin(Nss_Group, NSS_Line[pos], GPIO_PIN_SET);
+}
+
+char ISPI1_GetDeviceStatus(int pos)
+{
+	if (pos >= NSS_LineSize) return -1;
+	if (HAL_GPIO_ReadPin(Nss_Group, NSS_Line[pos]) == GPIO_PIN_RESET) return 0;
+	else return 1;
+}
+
+void ISPI_Comm_Block_Wait()
+{
+	while(ISPI_MASTER_SEND_FIN != 0);
+	while(ISPI_MASTER_RECV_FIN != 0);
+}
 
 //IT Handler
 void SPI1_IRQHandler()

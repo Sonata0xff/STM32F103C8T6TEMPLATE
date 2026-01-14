@@ -10,20 +10,46 @@ static GPIO_TypeDef* Nss_Group = GPIOA;
 /*
 SPI1 will be matser, SPI2 will be the slave
 */
+
+DMA_HandleTypeDef tx_dma = {
+	.Instance = DMA1_Channel3,
+	.Init.Direction = DMA_MEMORY_TO_PERIPH,
+	.Init.PeriphInc = DMA_PINC_DISABLE,
+	.Init.MemInc = DMA_MINC_ENABLE,
+	.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+	.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+	.Init.Mode = DMA_NORMAL,
+	.Init.Priority = DMA_PRIORITY_HIGH
+};
+
+DMA_HandleTypeDef rx_dma = {
+	.Instance = DMA1_Channel2,
+	.Init.Direction = DMA_PERIPH_TO_MEMORY,
+	.Init.PeriphInc = DMA_PINC_DISABLE,
+	.Init.MemInc = DMA_MINC_ENABLE,
+	.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+	.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+	.Init.Mode = DMA_NORMAL,
+	.Init.Priority = DMA_PRIORITY_HIGH
+};
+
 SPI_HandleTypeDef spi1_config = {
 		.Instance = SPI1,
 		.Init.Mode = SPI_MODE_MASTER,
 		.Init.Direction = SPI_DIRECTION_2LINES,
 		.Init.DataSize = SPI_DATASIZE_8BIT,
 		.Init.NSS = SPI_NSS_SOFT,
-		.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32,// 2Mhz, This need tobe explosed to the user.
+		.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8,// 4Mhz, This need tobe explosed to the user.
 		.Init.FirstBit = SPI_FIRSTBIT_MSB, // This need to be explosed to the user.
 		.Init.TIMode = SPI_TIMODE_DISABLE,
 		.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE,
 		.State = HAL_SPI_STATE_RESET,
 		.Init.CLKPolarity = SPI_POLARITY_LOW,// This need to be explosed to the user.
-		.Init.CLKPhase = SPI_PHASE_1EDGE// This need to be explosed to the user.
+		.Init.CLKPhase = SPI_PHASE_1EDGE,// This need to be explosed to the user.
+		.hdmatx = &tx_dma,
+		.hdmarx = &rx_dma
 };
+
 void ISPI1_Init()
 {
 	//open the device clock
@@ -42,7 +68,10 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		PA6 = MISO
 		PA7 = MOSI
 		*/
-		
+		//DMA Init
+		__HAL_RCC_DMA1_CLK_ENABLE();
+		HAL_DMA_Init(&tx_dma);
+		HAL_DMA_Init(&rx_dma);
 		//GPIO Init
 		__HAL_RCC_GPIOA_CLK_ENABLE();
 	
@@ -50,7 +79,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		GPIO_InitTypeDef io_config = {
 			.Pin = GPIO_PIN_5,
 			.Mode = GPIO_MODE_AF_PP,
-			.Speed = GPIO_SPEED_FREQ_MEDIUM,
+			.Speed = GPIO_SPEED_FREQ_HIGH,
 			.Pull = GPIO_NOPULL
 		};
 		HAL_GPIO_Init(GPIOA, &io_config);
@@ -61,16 +90,9 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		
 		//MISO Init
 		io_config.Pin = GPIO_PIN_6;
-		io_config.Mode = GPIO_MODE_INPUT;
+		io_config.Mode = GPIO_MODE_AF_INPUT;
 		io_config.Pull = GPIO_PULLUP;
 		HAL_GPIO_Init(GPIOA, &io_config);
-		
-		//NSS Now ti's one. It wiil be explosed to the user.
-		io_config.Pin = GPIO_PIN_4;
-		io_config.Mode = GPIO_MODE_OUTPUT_PP;
-		io_config.Pull = GPIO_NOPULL;
-		HAL_GPIO_Init(GPIOA, &io_config);
-		
 		
 		//NVIC Init
 		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
@@ -120,7 +142,7 @@ void ISPI1_NSS_Init(GPIO_TypeDef* gpioG, uint32_t* Pin, unsigned char size)
 	GPIO_InitTypeDef io_config = {
 		.Mode = GPIO_MODE_OUTPUT_PP,
 		.Pull = GPIO_NOPULL,
-		.Speed = GPIO_SPEED_FREQ_MEDIUM
+		.Speed = GPIO_SPEED_FREQ_HIGH
 	};
 	for (unsigned char i = 0; i < NSS_LineSize; i++) {
 		NSS_Line[i] = Pin[i];

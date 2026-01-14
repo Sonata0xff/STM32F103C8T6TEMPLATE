@@ -8,7 +8,9 @@
 #ifndef NRF2401_H
 #define NRF2401_H
 
-void NRF2401_Init();
+void NRF2401_Init(int CS_Line);
+
+void NRF2401_Start(unsigned char* res);
 
 #endif
 #endif

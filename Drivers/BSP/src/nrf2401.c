@@ -33,7 +33,7 @@ void NRF2401_Start(unsigned char* res)
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(val, 2);
 	//ISPI1_SenRecBytes(val, res, size);
-	ISPI_Comm_Block_Wait();
+	while(1);
 	
 	
 }

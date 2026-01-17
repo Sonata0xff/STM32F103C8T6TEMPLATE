@@ -14,7 +14,8 @@ int main()
 	
 	//data
 	uint32_t pin_group[1] = {GPIO_PIN_4};
-	unsigned char res[3] = {0xaa, 0xf0, 0xfa};
+	unsigned char res[2] = {0x00, 0xff};
+	char tmp[4] = {'#', '#', '#', '#'};
 	
 	//SPI init
 	ISPI1_Init();
@@ -29,28 +30,14 @@ int main()
 	OLED_Flash_Screen(0x00);
 	
 	//test code
-	/*GPIO_InitTypeDef cc_con = {
-		.Pin = GPIO_PIN_9,
-		.Mode = GPIO_MODE_OUTPUT_PP,
-		.Pull = GPIO_NOPULL,
-		.Speed = GPIO_SPEED_FREQ_HIGH
-	};
-	HAL_GPIO_Init(GPIOB, &cc_con);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET);*/
-	
-	ISPI1_SendBytes(res, 3);
-	
-	//NRF2401_Init(0);
-	ISPI_Comm_Block_Wait();
-	//NRF2401_Start(res);
+	NRF2401_Init(0);
+	NRF2401_Start(res);
 	
 	
-	
-	OLED_WriteIn_16x8Char(0,0,'b');
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
-	
-	
-	
+	for (int i = 0; i < 2; i++) {
+		TransNum2String(res[i], tmp);
+		OLED_WriteIn_16x8String(i*4, 0, 4, (unsigned char*)tmp);
+	}
 	while(1);
 	return 0;
 }

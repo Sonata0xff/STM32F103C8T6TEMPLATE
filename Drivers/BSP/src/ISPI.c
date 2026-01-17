@@ -92,7 +92,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		//MISO Init
 		io_config.Pin = GPIO_PIN_6;
 		io_config.Mode = GPIO_MODE_AF_INPUT;
-		io_config.Pull = GPIO_PULLUP;
+		io_config.Pull = GPIO_NOPULL;//here is a fucking bug here, we can't use pull up here for si24r1 chip!!!
 		HAL_GPIO_Init(GPIOA, &io_config);
 		
 		//NVIC Init

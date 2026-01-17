@@ -2,8 +2,7 @@
 
 #ifdef ISPI_API_EN
 
-static uint8_t ISPI_MASTER_SEND_FIN = 0;//0 means send finished.
-static uint8_t ISPI_MASTER_RECV_FIN = 0;//0 means recv finished.
+static uint8_t ISPI_MASTER_COMM_FIN = 0;//0 means comm finished.
 static uint8_t NSS_Line[16]; // nss line
 static uint8_t NSS_LineSize = 0;//nss line num
 static GPIO_TypeDef* Nss_Group = GPIOA;
@@ -96,8 +95,6 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		
 		//NVIC Init
 		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-		//HAL_NVIC_SetPriority(SPI1_IRQn, 0, 1);
-		//HAL_NVIC_EnableIRQ(SPI1_IRQn);
 		HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 1);
 		HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 1);
 		HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
@@ -107,15 +104,14 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
 {
 	ISPI_Comm_Block_Wait();
-	ISPI_MASTER_SEND_FIN = 1;
+	ISPI_MASTER_COMM_FIN = 1;
 	return HAL_SPI_Transmit_DMA(&spi1_config, val, size);
 }
 
 HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* recvPacks, int size)
 {
 	ISPI_Comm_Block_Wait();
-	ISPI_MASTER_SEND_FIN = 1;
-	ISPI_MASTER_RECV_FIN = 1;
+	ISPI_MASTER_COMM_FIN = 1;
 	return HAL_SPI_TransmitReceive_DMA(&spi1_config,
 																		sendPacks, recvPacks, size);
 }
@@ -123,18 +119,23 @@ HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* rec
 HAL_StatusTypeDef ISPI1_RecvBytes(unsigned char* recvPacks, int size)
 {
 	ISPI_Comm_Block_Wait();
-	ISPI_MASTER_RECV_FIN = 1;
+	ISPI_MASTER_COMM_FIN = 1;
 	return HAL_SPI_Receive_DMA(&spi1_config, recvPacks, size);
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	ISPI_MASTER_SEND_FIN = 0;
+	ISPI_MASTER_COMM_FIN = 0;
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	ISPI_MASTER_RECV_FIN = 0;
+	ISPI_MASTER_COMM_FIN = 0;
+}
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	ISPI_MASTER_COMM_FIN = 0;
 }
 
 void ISPI1_NSS_Init(GPIO_TypeDef* gpioG, uint32_t* Pin, unsigned char size)
@@ -177,16 +178,8 @@ char ISPI1_GetDeviceStatus(int pos)
 
 void ISPI_Comm_Block_Wait()
 {
-	while(ISPI_MASTER_SEND_FIN != 0);
-	while(ISPI_MASTER_RECV_FIN != 0);
+	while(ISPI_MASTER_COMM_FIN != 0);
 }
-
-//IT Handler
-void SPI1_IRQHandler()
-{
-	HAL_SPI_IRQHandler(&spi1_config);
-}
-
 
 //DMA IT Handler
 void DMA1_Channel2_IRQHandler()

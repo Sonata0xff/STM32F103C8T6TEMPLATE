@@ -7,5 +7,7 @@
 #define OLED_API_EN
 #define ISPI_API_EN
 #define NRF2401_API_EN
+#define UTILS_API_EN
+#define START_UP_API_EN
 
 #endif

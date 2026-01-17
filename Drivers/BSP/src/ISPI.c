@@ -71,6 +71,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		__HAL_RCC_DMA1_CLK_ENABLE();
 		HAL_DMA_Init(&tx_dma);
 		HAL_DMA_Init(&rx_dma);
+		__HAL_LINKDMA(&spi1_config, hdmatx, tx_dma);
+		__HAL_LINKDMA(&spi1_config, hdmarx, rx_dma);
 		//GPIO Init
 		__HAL_RCC_GPIOA_CLK_ENABLE();
 	
@@ -105,7 +107,8 @@ HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
 {
 	ISPI_Comm_Block_Wait();
 	ISPI_MASTER_COMM_FIN = 1;
-	return HAL_SPI_Transmit_DMA(&spi1_config, val, size);
+	HAL_StatusTypeDef res = HAL_SPI_Transmit_DMA(&spi1_config, val, size);
+	return res;
 }
 
 HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* recvPacks, int size)

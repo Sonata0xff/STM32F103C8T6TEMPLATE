@@ -19,7 +19,7 @@ void SystemClock_Config()
 			.APB1CLKDivider = RCC_HCLK_DIV2,	// PCLK1 = 36MHz
 			.APB2CLKDivider = RCC_HCLK_DIV1		// PCLK2 = 72MHz
 		};
-		
+		HAL_Init();
     HAL_RCC_OscConfig(&RCC_OscInitStruct);
 		HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
 }

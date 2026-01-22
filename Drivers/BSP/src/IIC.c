@@ -28,7 +28,6 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 	//CLOCK int
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	//GPIO init
-	__HAL_AFIO_REMAP_I2C1_ENABLE();
 	GPIO_InitTypeDef sclConfig = {
 		.Mode = GPIO_MODE_AF_OD,
 		.Pin = GPIO_PIN_6,

@@ -6,6 +6,15 @@
 #include "ISPI.h"
 #include "nrf2401.h"
 #include "utils.h"
+#include "GPIO_EXIT.h"
+
+int testVal = 0;
+
+void TestFunc()
+{
+	if (testVal >= 9) testVal = 0;
+	else testVal++;
+}
 
 int main()
 {
@@ -28,6 +37,9 @@ int main()
 	OLED_Init();
 	OLED_TurnOn_Screen();
 	OLED_Flash_Screen(0x00);
+	
+	//GPIO_INPUT init
+	Input_Port_IT_Init(TestFunc);
 	
 	//test code
 	NRF2401_Init(0);

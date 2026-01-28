@@ -9,5 +9,5 @@
 #define NRF2401_API_EN
 #define UTILS_API_EN
 #define START_UP_API_EN
-
+#define GPIO_EXIT_API_EN
 #endif

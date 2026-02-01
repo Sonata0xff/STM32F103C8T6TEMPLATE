@@ -1,11 +1,10 @@
 #include "IIC.h"
-
 #ifdef IIC_API_EN
 //I2C1 is sneder, I2C2 is receiver.
 
 static const uint32_t clk_freq = 200000; //default clock speed 200kHz
 static const uint32_t self_addr = 0; //default self address SelfAddress
-static uint8_t I2C1_SEND_FIN = 0;// 0 means send finished.
+static AtomVarType I2C1_SEND_FIN;// ATOM_VALUE_RESET means send finished.
 
 
 //basic iic info
@@ -25,6 +24,8 @@ I2C_HandleTypeDef iic1_config = {
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 {
+	//lock init
+	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_RESET);
 	//CLOCK int
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	//GPIO init
@@ -72,18 +73,18 @@ HAL_StatusTypeDef IIC1_Init(uint32_t clkFreq, uint32_t selfAddr)
 
 HAL_StatusTypeDef IIC1SendBytes(char* value, int size, uint16_t addr)
 {
-	I2C1_SEND_FIN = 1;
+	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_SET);
 	return HAL_I2C_Master_Transmit_IT(&iic1_config, addr, (unsigned char*)value, size);
 }
 //This will only be activated by I2C1 master send finish.
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-	I2C1_SEND_FIN = 0;
+	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_RESET);
 }
 
 void IIC1_Send_Block_Wait()
 {
-	while(I2C1_SEND_FIN != 0);
+	while(Atom_Read(&I2C1_SEND_FIN) != ATOM_VALUE_RESET);
 }
 
 #endif

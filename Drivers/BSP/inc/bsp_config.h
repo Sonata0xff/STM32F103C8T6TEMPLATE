@@ -10,4 +10,5 @@
 #define UTILS_API_EN
 #define START_UP_API_EN
 #define GPIO_EXIT_API_EN
+#define ATOM_VAR_API_EN
 #endif

@@ -5,6 +5,7 @@
 #ifdef IIC_API_EN
 #ifndef IIC_H
 #define IIC_H
+#include "AtomVariable.h"
 //IIC1 parameters:
 //1.clkFreq : SCL frequency ,Hz. Default is 200000, means 200KHz
 //2.selfAddr : self master address, default is 0. 

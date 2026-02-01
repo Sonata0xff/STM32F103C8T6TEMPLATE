@@ -5,7 +5,7 @@
 
 #include "stm32f1xx.h"                  // Device header
 #include "stm32f1xx_hal.h"
-
+#include "AtomVariable.h"
 void ISPI1_Init();
 
 HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size);

@@ -2,7 +2,7 @@
 
 #ifdef ISPI_API_EN
 
-static uint8_t ISPI_MASTER_COMM_FIN = 0;//0 means comm finished.
+AtomVarType ISPI_MASTER_COMM_FIN; //ATOM_VALUE_RESET means comm finished.
 static uint8_t NSS_Line[16]; // nss line
 static uint8_t NSS_LineSize = 0;//nss line num
 static GPIO_TypeDef* Nss_Group = GPIOA;
@@ -67,6 +67,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		PA6 = MISO
 		PA7 = MOSI
 		*/
+		//lock init
+		Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_RESET);
 		//DMA Init
 		__HAL_RCC_DMA1_CLK_ENABLE();
 		HAL_DMA_Init(&tx_dma);
@@ -92,7 +94,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		//MISO Init
 		io_config.Pin = GPIO_PIN_6;
 		io_config.Mode = GPIO_MODE_AF_INPUT;
-		io_config.Pull = GPIO_NOPULL;//here is a fucking bug here, we can't use pull up here for si24r1 chip!!!
+		io_config.Pull = GPIO_NOPULL;
 		HAL_GPIO_Init(GPIOA, &io_config);
 		
 		//NVIC Init
@@ -106,7 +108,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
 {
 	ISPI_Comm_Block_Wait();
-	ISPI_MASTER_COMM_FIN = 1;
+	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_SET);
 	HAL_StatusTypeDef res = HAL_SPI_Transmit_DMA(&spi1_config, val, size);
 	return res;
 }
@@ -114,7 +116,7 @@ HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
 HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* recvPacks, int size)
 {
 	ISPI_Comm_Block_Wait();
-	ISPI_MASTER_COMM_FIN = 1;
+	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_SET);
 	return HAL_SPI_TransmitReceive_DMA(&spi1_config,
 																		sendPacks, recvPacks, size);
 }
@@ -122,23 +124,23 @@ HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* rec
 HAL_StatusTypeDef ISPI1_RecvBytes(unsigned char* recvPacks, int size)
 {
 	ISPI_Comm_Block_Wait();
-	ISPI_MASTER_COMM_FIN = 1;
+	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_SET);
 	return HAL_SPI_Receive_DMA(&spi1_config, recvPacks, size);
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	ISPI_MASTER_COMM_FIN = 0;
+	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_RESET);
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	ISPI_MASTER_COMM_FIN = 0;
+	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_RESET);
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	ISPI_MASTER_COMM_FIN = 0;
+	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_RESET);
 }
 
 void ISPI1_NSS_Init(GPIO_TypeDef* gpioG, uint32_t* Pin, unsigned char size)
@@ -181,7 +183,7 @@ char ISPI1_GetDeviceStatus(int pos)
 
 void ISPI_Comm_Block_Wait()
 {
-	while(ISPI_MASTER_COMM_FIN != 0);
+	while(Atom_Read(&ISPI_MASTER_COMM_FIN) != ATOM_VALUE_RESET);
 }
 
 //DMA IT Handler

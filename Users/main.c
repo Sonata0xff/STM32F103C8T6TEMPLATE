@@ -8,14 +8,6 @@
 #include "utils.h"
 #include "GPIO_EXIT.h"
 
-int testVal = 0;
-
-void TestFunc()
-{
-	if (testVal >= 9) testVal = 0;
-	else testVal++;
-}
-
 int main()
 {
 	//stand process
@@ -23,8 +15,6 @@ int main()
 	
 	//data
 	uint32_t pin_group[1] = {GPIO_PIN_4};
-	unsigned char res[2] = {0x00, 0xff};
-	char tmp[4] = {'#', '#', '#', '#'};
 	
 	//SPI init
 	ISPI1_Init();
@@ -38,18 +28,14 @@ int main()
 	OLED_TurnOn_Screen();
 	OLED_Flash_Screen(0x00);
 	
-	//GPIO_INPUT init
-	Input_Port_IT_Init(TestFunc);
-	
 	//test code
 	NRF2401_Init(0);
-	NRF2401_Start(res);
-	
-	
-	for (int i = 0; i < 2; i++) {
-		TransNum2String(res[i], tmp);
-		OLED_WriteIn_16x8String(i*4, 0, 4, (unsigned char*)tmp);
-	}
+	while(1) {
+		NRF2401_Start();
+		HAL_Delay(2000);
+		NRF2401_Stop();
+		HAL_Delay(2000);
+	};
 	while(1);
 	return 0;
 }

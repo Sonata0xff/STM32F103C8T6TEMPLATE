@@ -1,16 +1,21 @@
 #include "bsp_config.h"
 
 #ifdef NRF2401_API_EN
+#ifndef NRF2401_H
+#define NRF2401_H
 #include "stm32f1xx.h"                  // Device header
 #include "stm32f1xx_hal.h"
 #include "ISPI.h"
-
-#ifndef NRF2401_H
-#define NRF2401_H
+#include "GPIO_EXIT.h"
 
 void NRF2401_Init(int CS_Line);
 
-void NRF2401_Start(unsigned char* res);
+//Start nrf2401, transport into standby-I mode.
+void NRF2401_Start();
 
+//stop nrf2401, transport into shutdown mode.
+void NRF2401_Stop();
+
+void NRF2401_IRQ_Handler();
 #endif
 #endif

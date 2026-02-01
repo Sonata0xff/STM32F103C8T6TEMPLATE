@@ -11,7 +11,6 @@
 #define ATOM_VALUE_SET 1
 #define ATOM_VALUE_RESET 0
 
-
 void Atom_Write(AtomVarType* var, AtomVarType value);
 
 AtomVarType Atom_Read(AtomVarType* var);

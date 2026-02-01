@@ -99,8 +99,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 		
 		//NVIC Init
 		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-		HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 1);
-		HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+		HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
 		HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
 		HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 }

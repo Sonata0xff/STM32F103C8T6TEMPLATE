@@ -124,13 +124,13 @@ void NRF2401_Send_Mode()
 	unsigned char orders[] = {0x00, 0x00, 0x00, 0x00};
 	unsigned char recData[] = {0x00, 0x00};
 	
-	//set PRIM_RX to 1
+	//set PRIM_RX to 0
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SenRecBytes(orders, recData, 2);
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	orders[0] = 0x20;
-	orders[1] = (recData[1] | 0x01);
+	orders[1] = (recData[1] & (~0x01));
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(orders, 2);
 	ISPI_Comm_Block_Wait();
@@ -159,24 +159,18 @@ void NRF2401_Send_Mode()
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	
-	//set pip0 receive size
-	orders[0] = 0x31;
-	orders[1] = 0x01;
-	ISPI1_SelectDevice(CSN_ORDER);
-	ISPI1_SendBytes(orders, 2);
-	ISPI_Comm_Block_Wait();
-	ISPI1_UnSelectDevice(CSN_ORDER);
-	
 	//init atom var
 	Atom_Write(&NRF_SEND, ATOM_VALUE_RESET);
 	
-	//transport into send mode
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET); //CE = 1
+	//flash tx cache
 	orders[0] = 0xe1;
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(orders, 1);
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
+	
+	//transport into send mode
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET); //CE = 1
 }
 
 void NRF2401_Send(unsigned char* datas, unsigned char size)

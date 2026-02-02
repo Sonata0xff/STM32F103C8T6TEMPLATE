@@ -107,7 +107,6 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 
 HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
 {
-	ISPI_Comm_Block_Wait();
 	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_SET);
 	HAL_StatusTypeDef res = HAL_SPI_Transmit_DMA(&spi1_config, val, size);
 	return res;
@@ -115,7 +114,6 @@ HAL_StatusTypeDef ISPI1_SendBytes(unsigned char* val, int size)
 
 HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* recvPacks, int size)
 {
-	ISPI_Comm_Block_Wait();
 	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_SET);
 	return HAL_SPI_TransmitReceive_DMA(&spi1_config,
 																		sendPacks, recvPacks, size);
@@ -123,7 +121,6 @@ HAL_StatusTypeDef ISPI1_SenRecBytes(unsigned char* sendPacks, unsigned char* rec
 
 HAL_StatusTypeDef ISPI1_RecvBytes(unsigned char* recvPacks, int size)
 {
-	ISPI_Comm_Block_Wait();
 	Atom_Write(&ISPI_MASTER_COMM_FIN, ATOM_VALUE_SET);
 	return HAL_SPI_Receive_DMA(&spi1_config, recvPacks, size);
 }

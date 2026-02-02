@@ -5,11 +5,15 @@
 #include "OLED.h"
 #include "utils.h"
 static int CSN_ORDER = 0;
+unsigned char comm_addr[3] = {0xaa, 0xfe, 0xaa};//wait for check
+static int data_len = 2;//Bytes
+
+AtomVarType NRF_SEND;//RESET means send finish 
 
 void NRF2401_Init(int CS_Line)
 {
 	//init IRQ source
-	//Input_Port_IT_Init(NRF2401_IRQ_Handler);
+	Input_Port_IT_Init(NRF2401_IRQ_Handler);
 	//init CE source
 	GPIO_InitTypeDef ce_config = {
 		.Mode = GPIO_MODE_OUTPUT_PP,
@@ -41,12 +45,12 @@ void NRF2401_Start()
 	ISPI1_SendBytes(orders, 2);
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
-	orders[0] = 0x00;
-	orders[1] = 0x00;
 	
 	
 	
 	//read reg0
+	orders[0] = 0x00;
+	orders[1] = 0x00;
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SenRecBytes(orders, recData, 2);
 	ISPI_Comm_Block_Wait();
@@ -63,7 +67,7 @@ void NRF2401_Start()
 	HAL_Delay(2);
 	
 	//test func
-	/*orders[0] = 0x00;
+	orders[0] = 0x00;
 	orders[1] = 0x00;
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SenRecBytes(orders, recData, 2);
@@ -73,7 +77,7 @@ void NRF2401_Start()
 	for (int i = 0; i < 2; i++) {
 		TransNum2String(recData[i], tmp);
 		OLED_WriteIn_16x8String(i*4, 0, 4, (unsigned char*)tmp);
-	}*/
+	}
 }
 
 void NRF2401_Stop()
@@ -100,7 +104,7 @@ void NRF2401_Stop()
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//test func
-	/*orders[0] = 0x00;
+	orders[0] = 0x00;
 	orders[1] = 0x00;
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SenRecBytes(orders, recData, 2);
@@ -110,7 +114,85 @@ void NRF2401_Stop()
 	for (int i = 0; i < 2; i++) {
 		TransNum2String(recData[i], tmp);
 		OLED_WriteIn_16x8String(i*4, 0, 4, (unsigned char*)tmp);
-	}*/
+	}
+}
+
+void NRF2401_Send_Mode()
+{
+	
+	//order variable
+	unsigned char orders[] = {0x00, 0x00, 0x00, 0x00};
+	unsigned char recData[] = {0x00, 0x00};
+	
+	//set PRIM_RX to 1
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SenRecBytes(orders, recData, 2);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	orders[0] = 0x20;
+	orders[1] = (recData[1] | 0x01);
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 2);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	
+	//set addr len=3
+	orders[0] = 0x23;
+	orders[1] = 0x01;
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 2);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	
+	//set addr
+	orders[0] = 0x2a;
+	orders[1] = comm_addr[0];
+	orders[2] = comm_addr[1];
+	orders[3] = comm_addr[2];
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 4);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	orders[0] = 0x30;
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 4);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	
+	//set pip0 receive size
+	orders[0] = 0x31;
+	orders[1] = 0x01;
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 2);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	
+	//init atom var
+	Atom_Write(&NRF_SEND, ATOM_VALUE_RESET);
+	
+	//transport into send mode
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET); //CE = 1
+	orders[0] = 0xe1;
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 1);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+}
+
+void NRF2401_Send(unsigned char* datas, unsigned char size)
+{
+	//wait for coding ...
+}
+
+void NRF2401_Recv_Mode()
+{
+	//wait for coding ...
+	
+}
+
+void NRF2401_Recv()
+{
+	//wait for coding ...
 }
 
 void NRF2401_IRQ_Handler()

@@ -24,7 +24,7 @@ void Input_Port_IT_Init(Handler_Func handle_func)
 	HAL_GPIO_Init(GPIOA, &port_config);
 	//IT Init
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 1);
+	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 

@@ -14,7 +14,8 @@ Pip0 for data Ack
 */
 
 enum CommStatus {
-	CommStatus_Idle = 0,
+	CommStatus_Dummy = 0,
+	CommStatus_Idle,
 	CommStatus_Standby,
 	CommStatus_Send,
 	CommStatus_Receive,
@@ -35,12 +36,18 @@ void NRF2401_Revert_Standby();
 //transport to Send mode
 void NRF2401_Send_Mode();
 void NRF2401_Send(unsigned char* datas);
-void NRF2401_Send_FinHandle();
+void NRF2401_Send_Block_Wait();
+//return 1 means success
+uint8_t NRF2401_Send_Wait();
+void Send_Time_Out_Handle();
+void Send_Fin_Handle();
 
 //transport to Receive mode
 void NRF2401_Recv_Mode();
-void NRF2401_Recv(unsigned char* datas);
-void NRF2401_Recv_FinHandle();
+void NRF2401_Recv_Block_Wait(unsigned char* datas);
+//return 1 means success
+uint8_t NRF2401_Recv_Wait(unsigned char* datas);
+void NRF2401_Recv_Handle();
 
 void NRF2401_IRQ_Handler();
 #endif

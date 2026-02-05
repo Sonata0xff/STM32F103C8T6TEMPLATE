@@ -7,13 +7,14 @@
 #include "nrf2401.h"
 #include "utils.h"
 #include "GPIO_EXIT.h"
+#include "test.h"
 
 int main()
 {
 	//stand process
 	Standard_process();
 	
-	//data
+	/*//data
 	uint32_t pin_group[1] = {GPIO_PIN_4};
 	
 	//SPI init
@@ -36,6 +37,7 @@ int main()
 		NRF2401_Stop();
 		HAL_Delay(2000);
 	};
-	while(1);
+	while(1);*/
+	NRF2401_Receiver();
 	return 0;
 }

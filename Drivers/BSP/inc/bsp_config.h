@@ -11,4 +11,6 @@
 #define START_UP_API_EN
 #define GPIO_EXIT_API_EN
 #define ATOM_VAR_API_EN
+#define NRF2401_TEST
+#define NRF2401_RECEIVER_TEST
 #endif

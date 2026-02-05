@@ -2,8 +2,6 @@
 
 #ifdef NRF2401_API_EN
 #include "nrf2401.h"
-#include "OLED.h"
-#include "utils.h"
 static int CSN_ORDER = 0;
 unsigned char comm_addr[3] = {0xaa, 0xfe, 0xaa};//wait for check
 static int data_len = 2;//Bytes

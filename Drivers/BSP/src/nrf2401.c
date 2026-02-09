@@ -88,19 +88,6 @@ void NRF2401_Start()
 	HAL_Delay(2);
 	
 	comm_status = CommStatus_Standby;
-	
-	//test func
-	/*orders[0] = 0x00;
-	orders[1] = 0x00;
-	ISPI1_SelectDevice(CSN_ORDER);
-	ISPI1_SenRecBytes(orders, recData, 2);
-	ISPI_Comm_Block_Wait();
-	ISPI1_UnSelectDevice(CSN_ORDER);
-	char tmp[4] = {'#', '#', '#', '#'};
-	for (int i = 0; i < 2; i++) {
-		TransNum2String(recData[i], tmp);
-		OLED_WriteIn_16x8String(i*4, 0, 4, (unsigned char*)tmp);
-	}*/
 }
 
 void NRF2401_Stop()
@@ -128,20 +115,6 @@ void NRF2401_Stop()
 	
 	//Change status
 	comm_status = CommStatus_Shutdown;
-	
-	
-	//test func
-	/*orders[0] = 0x00;
-	orders[1] = 0x00;
-	ISPI1_SelectDevice(CSN_ORDER);
-	ISPI1_SenRecBytes(orders, recData, 2);
-	ISPI_Comm_Block_Wait();
-	ISPI1_UnSelectDevice(CSN_ORDER);
-	char tmp[4] = {'#', '#', '#', '#'};
-	for (int i = 0; i < 2; i++) {
-		TransNum2String(recData[i], tmp);
-		OLED_WriteIn_16x8String(i*4, 0, 4, (unsigned char*)tmp);
-	}*/
 }
 
 void NRF2401_Send_Mode()
@@ -431,6 +404,18 @@ uint8_t NRF2401_Recv_Wait(unsigned char* datas)
 	Atom_Write(&NRF_RECV, ATOM_VALUE_RESET);
 	
 	return 1;
+}
+
+void NRF2401_Get_Reg(unsigned char addr, unsigned char *res)
+{
+	unsigned char orders[2];
+	//read data
+	orders[0] = addr;
+	orders[1] = 0x00;
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SenRecBytes(orders, res, 2);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
 }
 
 //interface

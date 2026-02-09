@@ -12,5 +12,7 @@
 void Standard_process();
 
 void TransNum2String(unsigned char val, char* res);
+
+void TransNum2StringWOS(unsigned char val, char* res);
 #endif
 #endif

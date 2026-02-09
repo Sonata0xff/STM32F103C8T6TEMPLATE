@@ -15,11 +15,10 @@ Pip0 for data Ack
 
 enum CommStatus {
 	CommStatus_Dummy = 0,
-	CommStatus_Idle,
+	CommStatus_Shutdown,
 	CommStatus_Standby,
 	CommStatus_Send,
-	CommStatus_Receive,
-	CommStatus_Shutdown
+	CommStatus_Receive
 };
 
 void NRF2401_Init(int CS_Line);
@@ -48,6 +47,9 @@ void NRF2401_Recv_Block_Wait(unsigned char* datas);
 //return 1 means success
 uint8_t NRF2401_Recv_Wait(unsigned char* datas);
 void NRF2401_Recv_Handle();
+
+//print reg value
+void NRF2401_Get_Reg(unsigned char addr, unsigned char *res);
 
 void NRF2401_IRQ_Handler();
 #endif

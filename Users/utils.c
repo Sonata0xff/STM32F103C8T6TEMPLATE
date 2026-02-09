@@ -21,4 +21,14 @@ void TransNum2String(unsigned char val, char* res)
 	res[3] = downVal;
 	
 }
+
+void TransNum2StringWOS(unsigned char val, char* res)
+{
+	unsigned char upVal = ((val >> 4) & 0x0f);
+	unsigned char downVal = (val & 0x0f);
+	upVal = upVal >= 10 ? upVal - 10 + 'a' : upVal + '0';
+	downVal = downVal >= 10 ? downVal - 10 + 'a' : downVal + '0';
+	res[0] = upVal;
+	res[1] = downVal;
+}
 #endif

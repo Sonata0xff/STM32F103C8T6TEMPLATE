@@ -48,8 +48,8 @@ void NRF2401_Recv_Block_Wait(unsigned char* datas);
 uint8_t NRF2401_Recv_Wait(unsigned char* datas);
 void NRF2401_Recv_Handle();
 
-//print reg value
-void NRF2401_Get_Reg(unsigned char addr, unsigned char *res);
+//print reg value size is res's len
+void NRF2401_Get_Reg(unsigned char addr, unsigned char *res, unsigned char size);
 
 void NRF2401_IRQ_Handler();
 #endif

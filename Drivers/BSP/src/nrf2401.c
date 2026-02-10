@@ -3,7 +3,7 @@
 #ifdef NRF2401_API_EN
 #include "nrf2401.h"
 static int CSN_ORDER = 0;
-unsigned char comm_addr[3] = {0xaa, 0xfe, 0xaa};//wait for check
+unsigned char comm_addr[3] = {0xaa, 0xfe, 0xac};//wait for check
 static int data_len = 2;//Bytes
 enum CommStatus comm_status = CommStatus_Dummy; //init value
 AtomVarType NRF_SEND;//RESET means no send
@@ -55,10 +55,10 @@ void NRF2401_Start()
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//set addr
-	orders[0] = 0x2a;
 	orders[1] = comm_addr[0];
 	orders[2] = comm_addr[1];
 	orders[3] = comm_addr[2];
+	orders[0] = 0x2a;
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(orders, 4);
 	ISPI_Comm_Block_Wait();
@@ -406,14 +406,14 @@ uint8_t NRF2401_Recv_Wait(unsigned char* datas)
 	return 1;
 }
 
-void NRF2401_Get_Reg(unsigned char addr, unsigned char *res)
+void NRF2401_Get_Reg(unsigned char addr, unsigned char *res, unsigned char size)
 {
-	unsigned char orders[2];
+	unsigned char orders[size];
 	//read data
 	orders[0] = addr;
-	orders[1] = 0x00;
+	for (unsigned char i = 1; i < size; ++i) orders[i] = 0x00;
 	ISPI1_SelectDevice(CSN_ORDER);
-	ISPI1_SenRecBytes(orders, res, 2);
+	ISPI1_SenRecBytes(orders, res, size);
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
 }

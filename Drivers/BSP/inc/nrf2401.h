@@ -21,6 +21,11 @@ enum CommStatus {
 	CommStatus_Receive
 };
 
+//set comm data len
+void NRF2401_Set_Comm_Data_Len(int len);
+
+int NRF2401_Get_Comm_Data_Len();
+
 void NRF2401_Init(int CS_Line);
 
 //Start nrf2401, transport into standby-I mode.

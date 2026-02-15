@@ -4,11 +4,25 @@
 #include "nrf2401.h"
 static int CSN_ORDER = 0;
 unsigned char comm_addr[3] = {0xaa, 0xfe, 0xac};//wait for check
-static int data_len = 2;//Bytes
+static int data_len = 2;//comm data bytes, default is 2 bytes
 static unsigned char ifTimeOut = 0; //1 means yes
 enum CommStatus comm_status = CommStatus_Dummy; //init value
 AtomVarType NRF_SEND;//RESET means no send
 AtomVarType NRF_RECV;//RESET means no receive
+
+void NRF2401_Set_Comm_Data_Len(int len)
+{
+	if (comm_status != CommStatus_Shutdown &&
+			comm_status != CommStatus_Dummy) return;
+	len = len > 32 ? 32 : len;
+	len = len <= 0 ? data_len : len;
+	data_len = len;
+}
+
+int NRF2401_Get_Comm_Data_Len()
+{
+	return data_len;
+}
 
 void NRF2401_Init(int CS_Line)
 {
@@ -332,7 +346,7 @@ void NRF2401_Recv_Mode()
 void NRF2401_IRQ_Handler()
 {
 	if (comm_status == CommStatus_Send) Atom_Write(&NRF_SEND, ATOM_VALUE_RESET);
-	if (comm_status == CommStatus_Receive) Atom_Write(&NRF_RECV, ATOM_VALUE_SET);
+	if (comm_status == CommStatus_Receive) Atom_Add(&NRF_RECV, ATOM_VALUE_SET);
 }
 
 
@@ -359,11 +373,11 @@ void NRF2401_Recv_Block_Wait(unsigned char* datas)
 	}
 	
 	//flash rx
-	orders[0] = 0xe2;
-	ISPI1_SelectDevice(CSN_ORDER);
-	ISPI1_SendBytes(orders, 1);
-	ISPI_Comm_Block_Wait();
-	ISPI1_UnSelectDevice(CSN_ORDER);
+	//orders[0] = 0xe2;
+	//ISPI1_SelectDevice(CSN_ORDER);
+	//ISPI1_SendBytes(orders, 1);
+	//ISPI_Comm_Block_Wait();
+	//ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//handle
 	NRF2401_Recv_Handle();
@@ -377,7 +391,7 @@ void NRF2401_Recv_Block_Wait(unsigned char* datas)
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//set atom
-	Atom_Write(&NRF_RECV, ATOM_VALUE_RESET);
+	Atom_Sub(&NRF_RECV, ATOM_VALUE_SET);
 }
 
 uint8_t NRF2401_Recv_Wait(unsigned char* datas)
@@ -403,11 +417,11 @@ uint8_t NRF2401_Recv_Wait(unsigned char* datas)
 	}
 	
 	//flash rx
-	orders[0] = 0xe2;
-	ISPI1_SelectDevice(CSN_ORDER);
-	ISPI1_SendBytes(orders, 1);
-	ISPI_Comm_Block_Wait();
-	ISPI1_UnSelectDevice(CSN_ORDER);
+	//orders[0] = 0xe2;
+	//ISPI1_SelectDevice(CSN_ORDER);
+	//ISPI1_SendBytes(orders, 1);
+	//ISPI_Comm_Block_Wait();
+	//ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//handle
 	NRF2401_Recv_Handle();
@@ -421,7 +435,7 @@ uint8_t NRF2401_Recv_Wait(unsigned char* datas)
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//set atom
-	Atom_Write(&NRF_RECV, ATOM_VALUE_RESET);
+	Atom_Sub(&NRF_RECV, ATOM_VALUE_SET);
 	
 	return 1;
 }

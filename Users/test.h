@@ -21,5 +21,14 @@ void NRF2401_Sender();
 #ifdef NRF2401_RECEIVER_TEST
 void NRF2401_Receiver();
 #endif
+
+#ifdef NRF_COMM_CASE1_SEND
+void nrf_testcase1_send();
+#endif
+
+#ifdef NRF_COMM_CASE1_RECV
+void nrf_testcase1_recv();
+#endif
+
 #endif
 //----------------------------------------------------

@@ -232,7 +232,98 @@ void NRF2401_Receiver()
 	
 	//test code stop----------------------------
 }
+#endif
+
+int comm_len = 4;
+
+#ifdef NRF_COMM_CASE1_SEND
+void nrf_testcase1_send()
+{
+	//test data
+	char title[] = "Sending...";
+	char title2[] = "Send Fin:";
+	char title3[] = "ACK";
+	char title4[] = "ERR";
+	char datas[] = "Happy new year, 2026!!!!";
+	int dataLen = 24; 
+	
+	uint8_t res = 0;
+	
+	//OLED init
+	IIC1_Init(0, 0);
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//nrf2401 init
+	uint32_t pin_group[1] = {GPIO_PIN_4};
+	ISPI1_Init();
+	ISPI1_NSS_Init(GPIOA, pin_group, 1);
+	NRF2401_Init(0);
+	NRF2401_Set_Comm_Data_Len(comm_len);
+	
+	//test code
+	OLED_WriteIn_16x8String(0, 0, 10, (unsigned char*)title);
+	NRF2401_Start();
+	NRF2401_Send_Mode();
+	for (int i = 0; i < dataLen / comm_len; i++) {
+		NRF2401_Send((unsigned char *)(&datas[i * comm_len]));
+		NRF2401_Send_Block_Wait();
+		res |= GetTimeOutRes();
+		HAL_Delay(3);
+	}
+	NRF2401_Revert_Standby();
+	OLED_WriteIn_16x8String(0, 1, 9, (unsigned char*)title2);
+	if (res != 0) {
+		OLED_WriteIn_16x8String(9, 1, 3, (unsigned char*)title4);
+	} else {
+		OLED_WriteIn_16x8String(9, 1, 3, (unsigned char*)title3);
+	}
+	
+	
+	//finish
+	while(1);
+}
 
 #endif
+
+#ifdef NRF_COMM_CASE1_RECV
+void nrf_testcase1_recv()
+{
+	//test data
+	char title[] = "Waiting...";
+	char recv_datas[comm_len];
+	int x = 0, y = 1;
+	
+	//OLED init
+	IIC1_Init(0, 0);
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//nrf2401 init
+	uint32_t pin_group[1] = {GPIO_PIN_4};
+	ISPI1_Init();
+	ISPI1_NSS_Init(GPIOA, pin_group, 1);
+	NRF2401_Init(0);
+	NRF2401_Set_Comm_Data_Len(comm_len);
+	
+	//test code
+	OLED_WriteIn_16x8String(0, 0, 10, (unsigned char*)title);
+	NRF2401_Start();
+	NRF2401_Recv_Mode();
+	while(1) {
+		NRF2401_Recv_Block_Wait((unsigned char*)recv_datas);
+		if(x == 16) {
+			x = 0;
+			++y;
+		}
+		OLED_WriteIn_16x8String(x, y, comm_len, (unsigned char *)recv_datas);
+		x += comm_len;
+	}
+}
+#endif
+
+
 #endif
 //----------------------------------------------------

@@ -320,7 +320,6 @@ void NRF2401_Recv_Mode()
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	orders[0] = 0x20;
 	orders[1] = (recData[1] | 0x01);
-	//orders[1] = (recData[1] & (~0x01));
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(orders, 2);
 	ISPI_Comm_Block_Wait();
@@ -372,13 +371,6 @@ void NRF2401_Recv_Block_Wait(unsigned char* datas)
 		datas[i] = recData[i + 1];
 	}
 	
-	//flash rx
-	//orders[0] = 0xe2;
-	//ISPI1_SelectDevice(CSN_ORDER);
-	//ISPI1_SendBytes(orders, 1);
-	//ISPI_Comm_Block_Wait();
-	//ISPI1_UnSelectDevice(CSN_ORDER);
-	
 	//handle
 	NRF2401_Recv_Handle();
 	
@@ -415,13 +407,6 @@ uint8_t NRF2401_Recv_Wait(unsigned char* datas)
 	for (int i = 0; i < data_len; ++i) {
 		datas[i] = recData[i + 1];
 	}
-	
-	//flash rx
-	//orders[0] = 0xe2;
-	//ISPI1_SelectDevice(CSN_ORDER);
-	//ISPI1_SendBytes(orders, 1);
-	//ISPI_Comm_Block_Wait();
-	//ISPI1_UnSelectDevice(CSN_ORDER);
 	
 	//handle
 	NRF2401_Recv_Handle();

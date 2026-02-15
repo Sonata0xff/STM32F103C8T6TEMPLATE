@@ -40,6 +40,7 @@ void NRF2401_Send_Block_Wait();
 uint8_t NRF2401_Send_Wait();
 void Send_Time_Out_Handle();
 void Send_Fin_Handle();
+uint8_t GetTimeOutRes();
 
 //transport to Receive mode
 void NRF2401_Recv_Mode();

@@ -39,5 +39,6 @@ int main()
 	};
 	while(1);*/
 	NRF2401_Receiver();
+	//NRF2401_Sender();
 	return 0;
 }

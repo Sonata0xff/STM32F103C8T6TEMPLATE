@@ -2,9 +2,120 @@
 //----------------------------------------------------
 #ifdef NRF2401_TEST
 #ifdef NRF2401_SENDER_TEST
+
+void PrintAndCheckReg()
+{
+	int pos = 0;
+	int line = 0;
+	//orders
+	unsigned char recData[4];
+	char valueStr[2];
+	//show STATUS and CONFIG
+	NRF2401_Get_Reg(0x00, recData, 2);
+	TransNum2StringWOS(recData[0], valueStr);
+	OLED_WriteIn_16x8String(pos, line, 2, (unsigned char *)valueStr);
+	pos += 3;
+
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	//show ENAA
+	NRF2401_Get_Reg(0x01, recData, 2);
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	//show EN_RXADDR
+	NRF2401_Get_Reg(0x02, recData, 2);
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	//show SETUP_AW
+	NRF2401_Get_Reg(0x03, recData, 2);
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	//show SETUP_RETR
+	NRF2401_Get_Reg(0x04, recData, 2);
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	pos = 2;
+	
+	//show FIFO_STATUS
+	NRF2401_Get_Reg(0x17, recData, 2);
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line + 1, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	//show FEATURE
+	NRF2401_Get_Reg(0x1d, recData, 2);
+	TransNum2StringWOS(recData[1], valueStr);
+	OLED_WriteIn_16x8String(pos, line + 1, 2, (unsigned char *)valueStr);
+	pos += 3;
+	
+	//show channel0 addr
+	NRF2401_Get_Reg(0x0a, recData, 4);
+	for (unsigned char i = 0; i < 3; i++) {
+		TransNum2StringWOS(recData[i + 1], valueStr);
+		OLED_WriteIn_16x8String(pos, line + 1, 2, (unsigned char *)valueStr);
+		pos += 3;
+	}
+	pos = 0;
+	
+	//show send addr
+	NRF2401_Get_Reg(0x10, recData, 4);
+	for (unsigned char i = 0; i < 3; i++) {
+		TransNum2StringWOS(recData[i + 1], valueStr);
+		OLED_WriteIn_16x8String(pos, line + 2, 2, (unsigned char *)valueStr);
+		pos += 3;
+	}
+	
+	if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2) == GPIO_PIN_RESET) OLED_WriteIn_16x8Char(pos, line + 2, '0');
+	else OLED_WriteIn_16x8Char(pos, line + 2, '1');
+	
+}
+
 void NRF2401_Sender()
 {
-
+	//test data
+	char send_bytes[2] = {'F', 'U'};
+	char ans[] = "OK";
+	uint8_t res = 0;
+	
+	//NSS line Group
+	uint32_t pin_group[1] = {GPIO_PIN_4};
+	
+	//communication protocol init
+	ISPI1_Init();
+	ISPI1_NSS_Init(GPIOA, pin_group, 1);
+	//IIC Init
+	IIC1_Init(0, 0);
+	
+	//Hardware: OLED init
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	//Hardware: NRF2401 init
+	NRF2401_Init(0);
+	
+	//test code start----------------------------
+	//OLED_WriteIn_16x8String(0, 0, 8, (unsigned char *)title);
+	NRF2401_Start();
+	NRF2401_Send_Mode();
+	//PrintAndCheckReg();
+	NRF2401_Send((unsigned char*)send_bytes);
+	NRF2401_Send_Block_Wait();
+	OLED_WriteIn_16x8String(0, 0, 2, (unsigned char*)ans);
+	if (GetTimeOutRes() == 0) OLED_WriteIn_16x8Char(0,1, 'F');
+	else OLED_WriteIn_16x8Char(0,1, 'T');
+	//main loop
+	while (1);
+	//test code stop----------------------------
 }
 #endif
 
@@ -82,13 +193,15 @@ void PrintAndCheckReg()
 		pos += 3;
 	}
 	
+	if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2) == GPIO_PIN_RESET) OLED_WriteIn_16x8Char(pos, line + 2, '0');
+	else OLED_WriteIn_16x8Char(pos, line + 2, '1');
 }
 
 void NRF2401_Receiver()
 {
 	//test data
 	char title[] = "Receive:";
-	char recv_bytes[2] = {'#', '#'};
+	char recv_bytes[4] = {'#', '#', ' ', ' '};
 	uint8_t res = 0;
 	
 	//NSS line Group
@@ -111,13 +224,11 @@ void NRF2401_Receiver()
 	//OLED_WriteIn_16x8String(0, 0, 8, (unsigned char *)title);
 	NRF2401_Start();
 	NRF2401_Recv_Mode();
-	PrintAndCheckReg();
-	
+	//PrintAndCheckReg();
+	NRF2401_Recv_Block_Wait((unsigned char*)recv_bytes);
+	OLED_WriteIn_16x8String(0, 0, 4, (unsigned char*)recv_bytes);
 	//main loop
-	while (1) {
-		//res = NRF2401_Recv_Wait((unsigned char*)recv_bytes);
-		//if (res == 1) OLED_WriteIn_16x8String(8, 0, 2, (unsigned char*)recv_bytes);
-	}
+	while (1);
 	
 	//test code stop----------------------------
 }

@@ -5,6 +5,7 @@
 static int CSN_ORDER = 0;
 unsigned char comm_addr[3] = {0xaa, 0xfe, 0xac};//wait for check
 static int data_len = 2;//Bytes
+static unsigned char ifTimeOut = 0; //1 means yes
 enum CommStatus comm_status = CommStatus_Dummy; //init value
 AtomVarType NRF_SEND;//RESET means no send
 AtomVarType NRF_RECV;//RESET means no receive
@@ -66,6 +67,14 @@ void NRF2401_Start()
 	orders[0] = 0x30;
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(orders, 4);
+	ISPI_Comm_Block_Wait();
+	ISPI1_UnSelectDevice(CSN_ORDER);
+	
+	//set receive datas len = data_len
+	orders[0] = 0x31;
+	orders[1] = data_len;
+	ISPI1_SelectDevice(CSN_ORDER);
+	ISPI1_SendBytes(orders, 2);
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	
@@ -159,6 +168,9 @@ void NRF2401_Send(unsigned char* datas)
 	//orders
 	unsigned char orders[data_len + 1];
 	
+	//set atom
+	Atom_Write(&NRF_SEND, ATOM_VALUE_SET);
+	
 	//write data to tx
 	orders[0] = 0xa0;
 	for (int i = 0; i < data_len; ++i) {
@@ -168,10 +180,6 @@ void NRF2401_Send(unsigned char* datas)
 	ISPI1_SendBytes(orders, data_len + 1);
 	ISPI_Comm_Block_Wait();
 	ISPI1_UnSelectDevice(CSN_ORDER);
-	
-	//set atom
-	Atom_Write(&NRF_SEND, ATOM_VALUE_SET);
-	
 }
 
 void NRF2401_Revert_Standby()
@@ -215,7 +223,7 @@ void NRF2401_Send_Block_Wait()
 	
 	//handle
 	if ((recData[0] & 0x20) != 0x00) Send_Fin_Handle();
-	if ((recData[0] & 0x10) != 0x00) Send_Time_Out_Handle();
+	else if ((recData[0] & 0x10) != 0x00) Send_Time_Out_Handle();
 	
 	//flash tx cache
 	orders[0] = 0xe1;
@@ -250,7 +258,7 @@ uint8_t NRF2401_Send_Wait()
 	
 	//handle
 	if ((recData[0] & 0x20) != 0x00) Send_Fin_Handle();
-	if ((recData[0] & 0x10) != 0x00) Send_Time_Out_Handle();
+	else if ((recData[0] & 0x10) != 0x00) Send_Time_Out_Handle();
 	
 	//flash tx cache
 	orders[0] = 0xe1;
@@ -271,8 +279,19 @@ uint8_t NRF2401_Send_Wait()
 }
 
 //interface
-void Send_Time_Out_Handle() {}
-void Send_Fin_Handle() {}
+void Send_Time_Out_Handle()
+{
+	ifTimeOut = 1;
+}
+void Send_Fin_Handle() 
+{
+	ifTimeOut = 0;
+}
+
+uint8_t GetTimeOutRes()
+{
+	return ifTimeOut;
+}
 
 void NRF2401_Recv_Mode()
 {
@@ -287,6 +306,7 @@ void NRF2401_Recv_Mode()
 	ISPI1_UnSelectDevice(CSN_ORDER);
 	orders[0] = 0x20;
 	orders[1] = (recData[1] | 0x01);
+	//orders[1] = (recData[1] & (~0x01));
 	ISPI1_SelectDevice(CSN_ORDER);
 	ISPI1_SendBytes(orders, 2);
 	ISPI_Comm_Block_Wait();

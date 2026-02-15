@@ -13,4 +13,5 @@
 #define ATOM_VAR_API_EN
 #define NRF2401_TEST
 #define NRF2401_RECEIVER_TEST
+//#define NRF2401_SENDER_TEST
 #endif

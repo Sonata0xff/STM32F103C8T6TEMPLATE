@@ -323,6 +323,41 @@ void nrf_testcase1_recv()
 	}
 }
 #endif
+#endif
+//----------------------------------------------------
+#ifdef TIM_COUNTER_TEST
+
+#ifdef TIM_COUNTER_BASE_CASE1
+void timCounterOutput()
+{
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
+}
+
+void OneMsTest()
+{
+	//init GPIO
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef test_port = {
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pin = GPIO_PIN_12,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &test_port);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+	
+	//delay
+	HAL_Delay(1);
+	
+	//init timCounter2 1ms period
+	Tim2_Counter_Init(100, timCounterOutput);
+	
+	//start test
+	Tim2_Counter_Start();
+	
+	//stuck loop
+	while(1);
+}
+#endif
 
 
 #endif

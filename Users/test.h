@@ -29,6 +29,21 @@ void nrf_testcase1_send();
 #ifdef NRF_COMM_CASE1_RECV
 void nrf_testcase1_recv();
 #endif
+#endif
+//----------------------------------------------------
+/*
+test case : timCounter
+*/
+#ifdef TIM_COUNTER_TEST
+#include "stm32f1xx.h"                  // Device header
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_conf.h"
+#include "timCounter.h"
+
+#ifdef TIM_COUNTER_BASE_CASE1
+void OneMsTest();
+#endif
+
 
 #endif
 //----------------------------------------------------

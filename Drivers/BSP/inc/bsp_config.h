@@ -12,11 +12,13 @@
 #define GPIO_EXIT_API_EN
 #define ATOM_VAR_API_EN
 #define TIM_COUNTER_API_EN
+#define MPU_API_EN
 //#define NRF2401_TEST
 //#define NRF2401_RECEIVER_TEST
 //#define NRF2401_SENDER_TEST
 //#define NRF_COMM_CASE1_SEND
 //#define NRF_COMM_CASE1_RECV
-#define TIM_COUNTER_TEST
-#define TIM_COUNTER_BASE_CASE1
+//#define TIM_COUNTER_TEST
+//#define TIM_COUNTER_BASE_CASE1
+//#define OLED_TEST
 #endif

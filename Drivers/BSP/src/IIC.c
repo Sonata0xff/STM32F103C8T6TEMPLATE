@@ -5,7 +5,14 @@
 static const uint32_t clk_freq = 400000; //default clock speed 400kHz
 static const uint32_t self_addr = 0; //default self address SelfAddress
 static AtomVarType I2C1_SEND_FIN;// ATOM_VALUE_RESET means send finished.
+uint8_t Comm_Mode = 0;//0 means IT, 1 means Polling.
+#define DEFAULT_TIME_OUT HAL_MAX_DELAY // Plooing mode time out time (infinite)
 
+
+void SetIIC_Comm_Mode(uint8_t mode)
+{
+	Comm_Mode = mode;
+}
 
 //basic iic info
 I2C_HandleTypeDef iic1_config = {
@@ -74,12 +81,38 @@ HAL_StatusTypeDef IIC1_Init(uint32_t clkFreq, uint32_t selfAddr)
 HAL_StatusTypeDef IIC1SendBytes(char* value, int size, uint16_t addr)
 {
 	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_SET);
-	return HAL_I2C_Master_Transmit_IT(&iic1_config, addr, (unsigned char*)value, size);
+	if (Comm_Mode == 0) return HAL_I2C_Master_Transmit_IT(&iic1_config, addr, (unsigned char*)value, size);
+	else {
+		HAL_StatusTypeDef res = HAL_I2C_Master_Transmit(&iic1_config, addr, (unsigned char*)value, size, DEFAULT_TIME_OUT);
+		Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_RESET);
+		return res;
+	}
 }
 //This will only be activated by I2C1 master send finish.
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_RESET);
+}
+
+HAL_StatusTypeDef IIC1ReadSlaveReg(char* value, int size, uint16_t addr, uint16_t regAddr)
+{
+	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_SET);
+	if (Comm_Mode == 0) return HAL_I2C_Mem_Read_IT(&iic1_config, addr, regAddr, I2C_MEMADD_SIZE_8BIT, (unsigned char *)value, size);
+	else {
+		HAL_StatusTypeDef res = HAL_I2C_Mem_Read(&iic1_config, addr, regAddr, I2C_MEMADD_SIZE_8BIT, (unsigned char *)value, size, DEFAULT_TIME_OUT);
+		Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_RESET);
+		return res;
+	}
+}
+HAL_StatusTypeDef IIC1WriteSlaveReg(char* value, int size, uint16_t addr, uint16_t regAddr)
+{
+	Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_SET);
+	if (Comm_Mode == 0) return HAL_I2C_Mem_Write_IT(&iic1_config, addr, regAddr, I2C_MEMADD_SIZE_8BIT, (unsigned char *)value, size);
+	else {
+		HAL_StatusTypeDef res = HAL_I2C_Mem_Write(&iic1_config, addr, regAddr, I2C_MEMADD_SIZE_8BIT, (unsigned char *)value, size, DEFAULT_TIME_OUT);
+		Atom_Write(&I2C1_SEND_FIN, ATOM_VALUE_RESET);
+		return res;
+	}
 }
 
 void IIC1_Send_Block_Wait()

@@ -9,6 +9,6 @@ int main()
 	//stand process
 	Standard_process();
 	//work
-	OneMsTest();
+	Slave_Mem_Read_Test();
 	return 0;
 }

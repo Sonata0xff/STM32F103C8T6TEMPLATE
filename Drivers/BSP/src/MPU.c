@@ -61,10 +61,11 @@ Processed_Data cache2;
 AtomVarType cache_lock;//SET means lock on, RESET means unlock
 /*
 Current remaining tasks:
-Complete function implementations in the MPU.h file
-Implement uint16_t to float conversion in the utils file
-Finish quaternion algorithm implementation and splitting for parallel calculation
-Design the buffer structure
+1.Complete function implementations in the MPU.h file
+2.Implement uint16_t to float conversion in the utils file
+3.Finish quaternion algorithm implementation and splitting for parallel calculation
+4.Design the buffer structure
+5.MPU test case desgin and dev
 */
 
 void MPU_Init()

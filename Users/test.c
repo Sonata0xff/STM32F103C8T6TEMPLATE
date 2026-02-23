@@ -382,3 +382,34 @@ void OLED_Test()
 }
 #endif
 //----------------------------------------------------
+#ifdef MPU_TEST
+void MPU_Base_Test()
+{
+	//datas
+	char res = '$';
+	char title[] = "res:";
+	int size = 4;
+	char result[] = "####";
+	
+	//Init comm protocol
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	
+	//OLED Init
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//start test
+	OLED_WriteIn_16x8String(0, 0, size, (unsigned char *)title);
+	MPU_Init();
+	TransNum2String(res, result);
+	OLED_WriteIn_16x8String(4, 0, size, (unsigned char*)result);
+	
+	
+	
+	//stuck
+	while(1);
+}
+#endif
+//----------------------------------------------------

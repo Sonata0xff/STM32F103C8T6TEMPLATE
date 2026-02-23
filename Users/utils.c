@@ -31,4 +31,9 @@ void TransNum2StringWOS(unsigned char val, char* res)
 	res[0] = upVal;
 	res[1] = downVal;
 }
+
+void TransU16_2_float(uint16_t from_, float* to_)
+{
+	
+}
 #endif

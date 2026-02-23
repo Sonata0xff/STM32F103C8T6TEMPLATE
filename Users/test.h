@@ -60,8 +60,20 @@ test case : OLED
 void OLED_Test();
 #endif
 //----------------------------------------------------
-
-
+/*
+test case : MPU
+*/
+#ifdef MPU_TEST
+#include "stm32f1xx.h"                  // Device header
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_conf.h"
+#include "OLED.h"
+#include "IIC.h"
+#include "MPU.h"
+#include "utils.h"
+void MPU_Base_Test();
+#endif
+//----------------------------------------------------
 
 
 

@@ -21,4 +21,5 @@
 //#define TIM_COUNTER_TEST
 //#define TIM_COUNTER_BASE_CASE1
 //#define OLED_TEST
+#define MPU_TEST
 #endif

@@ -2,7 +2,7 @@
 #ifdef IIC_API_EN
 //I2C1 is sneder, I2C2 is receiver.
 
-static const uint32_t clk_freq = 400000; //default clock speed 400kHz
+static const uint32_t clk_freq = 200000; //default clock speed 400kHz
 static const uint32_t self_addr = 0; //default self address SelfAddress
 static AtomVarType I2C1_SEND_FIN;// ATOM_VALUE_RESET means send finished.
 uint8_t Comm_Mode = 0;//0 means IT, 1 means Polling.

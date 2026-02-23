@@ -7,7 +7,8 @@
 #include "stm32f1xx_hal.h"
 
 typedef void (* Handler_Func)(void);
-void Input_Port_IT_Init(Handler_Func handle_func);
+void Input_Port_IT_Init(Handler_Func handle_func); //PA8 Port1 for nrf2401
+void Input_Port2_IT_Init(Handler_Func handle_func); //PB3 Port2 for MPU
 
 #endif
 #endif

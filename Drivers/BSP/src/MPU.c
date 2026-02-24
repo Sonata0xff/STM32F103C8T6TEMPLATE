@@ -63,8 +63,7 @@ Current remaining tasks:
 1.Complete function implementations in the MPU.h file
 2.Implement uint16_t to float conversion in the utils file
 3.Finish quaternion algorithm implementation and splitting for parallel calculation
-4.Design the buffer structure
-5.MPU test case desgin and dev
+4.MPU test case desgin and dev
 */
 
 void MPU_Init()

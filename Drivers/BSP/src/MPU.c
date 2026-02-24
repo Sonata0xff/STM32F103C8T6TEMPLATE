@@ -57,8 +57,7 @@
 #define GYRO_ZOUT_L 0x48
 
 Processed_Data cache1;
-Processed_Data cache2;
-AtomVarType cache_lock;//SET means lock on, RESET means unlock
+Data_Offset offset_cache1;
 /*
 Current remaining tasks:
 1.Complete function implementations in the MPU.h file
@@ -70,8 +69,6 @@ Current remaining tasks:
 
 void MPU_Init()
 {
-	//reset lock
-	Atom_Write(&cache_lock, ATOM_VALUE_RESET);
 	//orders
 	char orders[1];
 	// turn MPU into sleep
@@ -129,28 +126,97 @@ void MPU_Stop()
 
 void MPU_System_Calibration()
 {
-	
+	//data reset
+	offset_cache1.accel_offset[0] = 0;
+	offset_cache1.accel_offset[1] = 0;
+	offset_cache1.accel_offset[2] = 0;
+	offset_cache1.gyro_offset[0] = 0;
+	offset_cache1.gyro_offset[1] = 0;
+	offset_cache1.gyro_offset[2] = 0;
+	//10 for average
+	for (char i = 0; i < 10; ++i) {
+		//read Accel
+		MPU_Read_Accel();
+		//coding ...
+		//read Gyro
+	}
 }
 
 
 void MPU_Read_Accel()
 {
-	
+	//datas
+	char result;
+	//read accelX
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_XOUT_H);
+	IIC1_Send_Block_Wait();
+	cache1.accel_Data[0] = result;
+	cache1.accel_Data[0] <<= 8;
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_XOUT_L);
+	IIC1_Send_Block_Wait();
+	cache1.accel_Data[0] |= result;
+	//read accelY
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_YOUT_H);
+	IIC1_Send_Block_Wait();
+	cache1.accel_Data[1] = result;
+	cache1.accel_Data[1] <<= 8;
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_YOUT_L);
+	IIC1_Send_Block_Wait();
+	cache1.accel_Data[1] |= result;
+	//read  accelZ
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_ZOUT_H);
+	IIC1_Send_Block_Wait();
+	cache1.accel_Data[2] = result;
+	cache1.accel_Data[2] <<= 8;
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_ZOUT_L);
+	IIC1_Send_Block_Wait();
+	cache1.accel_Data[2] |= result;
 }
 
 void MPU_Read_Gyro()
 {
-	
+	//datas
+	char result;
+	//read GyroX
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_XOUT_H);
+	IIC1_Send_Block_Wait();
+	cache1.gyro_Data[0] = result;
+	cache1.gyro_Data[0] <<= 8;
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_XOUT_L);
+	IIC1_Send_Block_Wait();
+	cache1.gyro_Data[0] |= result;
+	//read GyroY
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_YOUT_H);
+	IIC1_Send_Block_Wait();
+	cache1.gyro_Data[1] = result;
+	cache1.gyro_Data[1] <<= 8;
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_YOUT_L);
+	IIC1_Send_Block_Wait();
+	cache1.gyro_Data[1] |= result;
+	//read  GyroZ
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_ZOUT_H);
+	IIC1_Send_Block_Wait();
+	cache1.gyro_Data[2] = result;
+	cache1.gyro_Data[2] <<= 8;
+	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_ZOUT_L);
+	IIC1_Send_Block_Wait();
+	cache1.gyro_Data[2] |= result;
 }
 
 void MPU_Get_Accel(float* res)
 {
-	
+	for (char i = 0; i < 3; ++i) {
+		TransU16_2_float(cache1.accel_Data[i], &res[i]);
+		res[i] -= offset_cache1.accel_offset[i];
+	}
 }
 
 void MPU_Get_Gyro(float* res)
 {
-	
+	for (char i = 0; i < 3; ++i) {
+		TransU16_2_float(cache1.gyro_Data[i], &res[i]);
+		res[i] -= offset_cache1.gyro_offset[i];
+	}
 }
 
 #endif

@@ -7,12 +7,17 @@
 #include "IIC.h"
 #include "GPIO_EXIT.h"
 #include "AtomVariable.h"
+#include "utils.h"
 
 typedef struct {
-	uint16_t accel_Data[3];//Accel value
-	uint16_t gyro_Data[3];//Gyro value
+	uint16_t accel_Data[3];//Accel value [x, y, z]
+	uint16_t gyro_Data[3];//Gyro value [x, y, z]
 	//Quaternion value
 } Processed_Data;
+typedef struct {
+	float accel_offset[3];//Accel offset [x, y, z]
+	float gyro_offset[3];//Gyro offsset [x, y, z]
+} Data_Offset;
 
 void MPU_Init();
 

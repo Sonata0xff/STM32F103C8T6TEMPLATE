@@ -56,14 +56,16 @@
 #define GYRO_ZOUT_H 0x47
 #define GYRO_ZOUT_L 0x48
 
+#define GYROSCOPE_SENSITIVITY 16.4f
+#define ACCELEROMETER_SENSITIVITY 4096.0f
+
 Processed_Data cache1;
 Data_Offset offset_cache1;
 /*
 Current remaining tasks:
-1.Complete function implementations in the MPU.h file
-2.Implement uint16_t to float conversion in the utils file
-3.Finish quaternion algorithm implementation and splitting for parallel calculation
-4.MPU test case desgin and dev
+1.Finish quaternion algorithm implementation and splitting for parallel calculation
+2.MPU test case desgin and dev
+3.data read opt
 */
 
 void MPU_Init()
@@ -125,6 +127,8 @@ void MPU_Stop()
 
 void MPU_System_Calibration()
 {
+	//tmp data
+	float tmpVal = 0;
 	//data reset
 	offset_cache1.accel_offset[0] = 0;
 	offset_cache1.accel_offset[1] = 0;
@@ -136,8 +140,21 @@ void MPU_System_Calibration()
 	for (char i = 0; i < 10; ++i) {
 		//read Accel
 		MPU_Read_Accel();
-		//coding ...
+		for (char j = 0; j < 3; ++j) {
+			TransI16_2_float(cache1.accel_Data[j], &tmpVal, ACCELEROMETER_SENSITIVITY);
+			if (j == 2) tmpVal -= -1.0f;
+			offset_cache1.accel_offset[j] += tmpVal;
+		}
 		//read Gyro
+		MPU_Read_Gyro();
+		for (char j = 0; j < 3; ++j) {
+			TransI16_2_float(cache1.gyro_Data[j], &tmpVal, GYROSCOPE_SENSITIVITY);
+			offset_cache1.gyro_offset[j] += tmpVal;
+		}
+	}
+	for (char i = 0; i < 3; ++i) {
+		offset_cache1.accel_offset[i] /= 10.0f;
+		offset_cache1.gyro_offset[i] /= 10.0f;
 	}
 }
 
@@ -149,27 +166,27 @@ void MPU_Read_Accel()
 	//read accelX
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_XOUT_H);
 	IIC1_Send_Block_Wait();
-	cache1.accel_Data[0] = result;
+	cache1.accel_Data[0] = (unsigned char)result;
 	cache1.accel_Data[0] <<= 8;
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_XOUT_L);
 	IIC1_Send_Block_Wait();
-	cache1.accel_Data[0] |= result;
+	cache1.accel_Data[0] |= (unsigned char)result;
 	//read accelY
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_YOUT_H);
 	IIC1_Send_Block_Wait();
-	cache1.accel_Data[1] = result;
+	cache1.accel_Data[1] = (unsigned char)result;
 	cache1.accel_Data[1] <<= 8;
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_YOUT_L);
 	IIC1_Send_Block_Wait();
-	cache1.accel_Data[1] |= result;
+	cache1.accel_Data[1] |= (unsigned char)result;
 	//read  accelZ
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_ZOUT_H);
 	IIC1_Send_Block_Wait();
-	cache1.accel_Data[2] = result;
+	cache1.accel_Data[2] = (unsigned char)result;
 	cache1.accel_Data[2] <<= 8;
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, ACCEL_ZOUT_L);
 	IIC1_Send_Block_Wait();
-	cache1.accel_Data[2] |= result;
+	cache1.accel_Data[2] |= (unsigned char)result;
 }
 
 void MPU_Read_Gyro()
@@ -179,33 +196,33 @@ void MPU_Read_Gyro()
 	//read GyroX
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_XOUT_H);
 	IIC1_Send_Block_Wait();
-	cache1.gyro_Data[0] = result;
+	cache1.gyro_Data[0] = (unsigned char)result;
 	cache1.gyro_Data[0] <<= 8;
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_XOUT_L);
 	IIC1_Send_Block_Wait();
-	cache1.gyro_Data[0] |= result;
+	cache1.gyro_Data[0] |= (unsigned char)result;
 	//read GyroY
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_YOUT_H);
 	IIC1_Send_Block_Wait();
-	cache1.gyro_Data[1] = result;
+	cache1.gyro_Data[1] = (unsigned char)result;
 	cache1.gyro_Data[1] <<= 8;
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_YOUT_L);
 	IIC1_Send_Block_Wait();
-	cache1.gyro_Data[1] |= result;
+	cache1.gyro_Data[1] |= (unsigned char)result;
 	//read  GyroZ
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_ZOUT_H);
 	IIC1_Send_Block_Wait();
-	cache1.gyro_Data[2] = result;
+	cache1.gyro_Data[2] = (unsigned char)result;
 	cache1.gyro_Data[2] <<= 8;
 	IIC1ReadSlaveReg(&result, 1, SLAVE_ADDR, GYRO_ZOUT_L);
 	IIC1_Send_Block_Wait();
-	cache1.gyro_Data[2] |= result;
+	cache1.gyro_Data[2] |= (unsigned char)result;
 }
 
 void MPU_Get_Accel(float* res)
 {
 	for (char i = 0; i < 3; ++i) {
-		TransU16_2_float(cache1.accel_Data[i], &res[i]);
+		TransI16_2_float(cache1.accel_Data[i], &res[i], ACCELEROMETER_SENSITIVITY);
 		res[i] -= offset_cache1.accel_offset[i];
 	}
 }
@@ -213,7 +230,7 @@ void MPU_Get_Accel(float* res)
 void MPU_Get_Gyro(float* res)
 {
 	for (char i = 0; i < 3; ++i) {
-		TransU16_2_float(cache1.gyro_Data[i], &res[i]);
+		TransI16_2_float(cache1.gyro_Data[i], &res[i], GYROSCOPE_SENSITIVITY);
 		res[i] -= offset_cache1.gyro_offset[i];
 	}
 }

@@ -10,8 +10,8 @@
 #include "utils.h"
 
 typedef struct {
-	uint16_t accel_Data[3];//Accel value [x, y, z]
-	uint16_t gyro_Data[3];//Gyro value [x, y, z]
+	int16_t accel_Data[3];//Accel value [x, y, z]
+	int16_t gyro_Data[3];//Gyro value [x, y, z]
 	//Quaternion value
 } Processed_Data;
 typedef struct {

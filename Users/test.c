@@ -386,14 +386,14 @@ void OLED_Test()
 void MPU_Base_Test()
 {
 	//datas
-	char res = '$';
-	char title[] = "res:";
-	int size = 4;
-	char result[] = "####";
+	float gyro[3];
+	for (char i = 0; i < 3; ++i) gyro[i] = 0.0f;
+	
 	
 	//Init comm protocol
 	IIC1_Init(0, 0);
 	SetIIC_Comm_Mode(1);//Polling mode
+	char value_float[9];//4 int + 3 float
 	
 	//OLED Init
 	OLED_Init();
@@ -401,15 +401,20 @@ void MPU_Base_Test()
 	OLED_Flash_Screen(0x00);
 	
 	//start test
-	OLED_WriteIn_16x8String(0, 0, size, (unsigned char *)title);
 	MPU_Init();
-	TransNum2String(res, result);
-	OLED_WriteIn_16x8String(4, 0, size, (unsigned char*)result);
-	
-	
-	
-	//stuck
-	while(1);
+	MPU_Start();
+	MPU_System_Calibration();
+	while(1) {
+		MPU_Read_Gyro();
+		MPU_Get_Gyro(gyro);
+		TransFloat_2_Str(gyro[0], value_float);
+		OLED_WriteIn_16x8String(0, 0, 9, (unsigned char*)value_float);
+		TransFloat_2_Str(gyro[1], value_float);
+		OLED_WriteIn_16x8String(0, 1, 9, (unsigned char*)value_float);
+		TransFloat_2_Str(gyro[2], value_float);
+		OLED_WriteIn_16x8String(0, 2, 9, (unsigned char*)value_float);
+		HAL_Delay(250);
+	}
 }
 #endif
 //----------------------------------------------------

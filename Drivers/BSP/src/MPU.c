@@ -137,7 +137,7 @@ void MPU_System_Calibration()
 	offset_cache1.gyro_offset[1] = 0;
 	offset_cache1.gyro_offset[2] = 0;
 	//10 for average
-	for (char i = 0; i < 10; ++i) {
+	for (int i = 0; i < 1000; ++i) {
 		//read Accel
 		MPU_Read_Accel();
 		for (char j = 0; j < 3; ++j) {
@@ -153,8 +153,8 @@ void MPU_System_Calibration()
 		}
 	}
 	for (char i = 0; i < 3; ++i) {
-		offset_cache1.accel_offset[i] /= 10.0f;
-		offset_cache1.gyro_offset[i] /= 10.0f;
+		offset_cache1.accel_offset[i] /= 1000.0f;
+		offset_cache1.gyro_offset[i] /= 1000.0f;
 	}
 }
 

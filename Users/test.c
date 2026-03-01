@@ -383,7 +383,7 @@ void OLED_Test()
 #endif
 //----------------------------------------------------
 #ifdef MPU_TEST
-void MPU_Base_Test()
+void MPU_Gyro_Test()
 {
 	//datas
 	float gyro[3];
@@ -412,6 +412,40 @@ void MPU_Base_Test()
 		TransFloat_2_Str(gyro[1], value_float);
 		OLED_WriteIn_16x8String(0, 1, 9, (unsigned char*)value_float);
 		TransFloat_2_Str(gyro[2], value_float);
+		OLED_WriteIn_16x8String(0, 2, 9, (unsigned char*)value_float);
+		HAL_Delay(250);
+	}
+}
+
+void MPU_Accel_Test()
+{
+	//datas
+	float accel[3];
+	for (char i = 0; i < 3; ++i) accel[i] = 0.0f;
+	
+	
+	//Init comm protocol
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	char value_float[9];//4 int + 3 float
+	
+	//OLED Init
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//start test
+	MPU_Init();
+	MPU_Start();
+	MPU_System_Calibration();
+	while(1) {
+		MPU_Read_Accel();
+		MPU_Get_Accel(accel);
+		TransFloat_2_Str(accel[0], value_float);
+		OLED_WriteIn_16x8String(0, 0, 9, (unsigned char*)value_float);
+		TransFloat_2_Str(accel[1], value_float);
+		OLED_WriteIn_16x8String(0, 1, 9, (unsigned char*)value_float);
+		TransFloat_2_Str(accel[2], value_float);
 		OLED_WriteIn_16x8String(0, 2, 9, (unsigned char*)value_float);
 		HAL_Delay(250);
 	}

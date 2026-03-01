@@ -71,7 +71,8 @@ test case : MPU
 #include "IIC.h"
 #include "MPU.h"
 #include "utils.h"
-void MPU_Base_Test();
+void MPU_Gyro_Test();
+void MPU_Accel_Test();
 #endif
 //----------------------------------------------------
 

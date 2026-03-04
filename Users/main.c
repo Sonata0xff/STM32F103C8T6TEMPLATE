@@ -8,6 +8,6 @@ int main()
 	//stand process
 	Standard_process();
 	//work
-	MPU_Gyro_Test();
+	MPU_Mag_Test();
 	return 0;
 }

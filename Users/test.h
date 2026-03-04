@@ -73,6 +73,7 @@ test case : MPU
 #include "utils.h"
 void MPU_Gyro_Test();
 void MPU_Accel_Test();
+void MPU_Mag_Test();
 #endif
 //----------------------------------------------------
 

@@ -450,5 +450,33 @@ void MPU_Accel_Test()
 		HAL_Delay(250);
 	}
 }
+
+void MPU_Mag_Test()
+{
+	//datas
+	char mag[3];
+	for (char i = 0; i < 3; ++i) mag[i] = 0;
+	char val[2];
+	
+	//Init comm protocol
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	char value_float[9];//4 int + 3 float
+	
+	//OLED Init
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	HAL_Delay(300);
+	//start test
+	IIC1ReadSlaveReg(mag, 3, 0x003c, 0x0A);
+	IIC1_Send_Block_Wait();
+	/*for (char i = 0; i < 3; ++i) {
+		TransNum2StringWOS(mag[i], val);
+		OLED_WriteIn_16x8String(i * 2, 0, 2, (unsigned char*)val);
+	}*/
+	OLED_WriteIn_16x8String(0,0,3, (unsigned char*)mag);
+	while(1);
+}
 #endif
 //----------------------------------------------------

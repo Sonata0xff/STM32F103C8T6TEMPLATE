@@ -3,6 +3,9 @@
 //MPU addr: 0x68
 #define SLAVE_ADDR 0x00d0
 
+#define MAG_ADDR 0x003c
+
+
 //self test GYRO
 #define SELF_TEST_X_GYRO 0x00
 #define SELF_TEST_Y_GYRO 0x01

@@ -7,6 +7,7 @@ int main()
 {
 	//stand process
 	Standard_process();
+	HAL_Delay(500);
 	//work
 	MPU_Mag_Test();
 	return 0;

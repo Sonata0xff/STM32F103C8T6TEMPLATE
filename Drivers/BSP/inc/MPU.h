@@ -8,15 +8,17 @@
 #include "GPIO_EXIT.h"
 #include "AtomVariable.h"
 #include "utils.h"
-
+#include "math.h"
 typedef struct {
 	int16_t accel_Data[3];//Accel value [x, y, z]
 	int16_t gyro_Data[3];//Gyro value [x, y, z]
+	int16_t magnet_Data[3]; //magnet value [x, y, z]
 	//Quaternion value
 } Processed_Data;
 typedef struct {
 	float accel_offset[3];//Accel offset [x, y, z]
 	float gyro_offset[3];//Gyro offsset [x, y, z]
+	float magnet_offset[3];//magnet offsset [x, y, z]
 } Data_Offset;
 
 void MPU_Init();
@@ -31,8 +33,12 @@ void MPU_Read_Accel();//load Accel result into buff space
 
 void MPU_Read_Gyro();//load Gyro result into buff space
 
+void MPU_Read_Magnet();//load Magnet result into buff space
+
 void MPU_Get_Accel(float* res);//get Accel result
 
 void MPU_Get_Gyro(float* res);//get Gyro result
+
+void MPU_Get_Magnet(float* res);//get magnet result 
 #endif
 #endif

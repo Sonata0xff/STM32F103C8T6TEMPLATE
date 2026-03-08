@@ -22,7 +22,7 @@
 #define YG_OFFSET_L  0x16
 #define ZG_OFFSET_H 0x17
 #define ZG_OFFSET_L 0x18
-//accel coonfig
+//accel config
 #define XA_OFFSET_H 0x77
 #define XA_OFFSET_L 0x78
 #define YA_OFFSET_H 0x7A
@@ -59,8 +59,25 @@
 #define GYRO_ZOUT_H 0x47
 #define GYRO_ZOUT_L 0x48
 
+//magnet config
+#define MAGN_CONFIG_A 0x00
+#define MAGN_CONFIG_B 0x01
+#define MAGN_MODE 0x02
+#define MAGN_STATUS 0x09
+#define CalThreshold 0
+
+//magnet output
+#define MAGN_XOUT_H 0x03 
+#define MAGN_XOUT_L 0x04
+#define MAGN_YOUT_H 0x05
+#define MAGN_YOUT_L 0x06
+#define MAGN_ZOUT_H 0x07
+#define MAGN_ZOUT_L 0x08
+
+
 #define GYROSCOPE_SENSITIVITY 16.4f
 #define ACCELEROMETER_SENSITIVITY 4096.0f
+#define MAGNET_SENSITIVITY 1090.0f
 
 Processed_Data cache1;
 Data_Offset offset_cache1;
@@ -101,6 +118,20 @@ void MPU_Init()
 	orders[0] = 0x40;
 	IIC1WriteSlaveReg(orders, 1, SLAVE_ADDR, PWR_MGMT_1);
 	IIC1_Send_Block_Wait();
+	
+	//init magnet
+	orders[0] = 0x78;
+	IIC1WriteSlaveReg(orders, 1, MAG_ADDR, MAGN_CONFIG_A);
+	IIC1_Send_Block_Wait();
+	
+	orders[0] = 0x20;
+	IIC1WriteSlaveReg(orders, 1, MAG_ADDR, MAGN_CONFIG_B);
+	IIC1_Send_Block_Wait();
+	
+	orders[0] = 0x02;
+	IIC1WriteSlaveReg(orders, 1, MAG_ADDR, MAGN_MODE);
+	IIC1_Send_Block_Wait();
+	
 }
 
 void MPU_Start()
@@ -115,6 +146,11 @@ void MPU_Start()
 	orders[0] = 0x01;
 	IIC1WriteSlaveReg(orders, 1, SLAVE_ADDR, USER_CTRL);
 	IIC1_Send_Block_Wait();
+	
+	//start magnet
+	orders[0] = 0x00;
+	IIC1WriteSlaveReg(orders, 1, MAG_ADDR, MAGN_MODE);
+	IIC1_Send_Block_Wait();
 }
 
 void MPU_Stop()
@@ -125,12 +161,23 @@ void MPU_Stop()
 	orders[0] = 0x40;
 	IIC1WriteSlaveReg(orders, 1, SLAVE_ADDR, PWR_MGMT_1);
 	IIC1_Send_Block_Wait();
+	
+	//stop magnet
+	orders[0] = 0x02;
+	IIC1WriteSlaveReg(orders, 1, MAG_ADDR, MAGN_MODE);
+	IIC1_Send_Block_Wait();
 }
 
 void MPU_System_Calibration()
 {
 	//tmp data
 	float tmpVal = 0;
+	float maxValue[3];
+	float minValue[3];
+	for (int i = 0; i < 3; ++i) {
+		maxValue[i] = 0;
+		minValue[i] = 0;
+	}
 	//data reset
 	offset_cache1.accel_offset[0] = 0;
 	offset_cache1.accel_offset[1] = 0;
@@ -138,7 +185,10 @@ void MPU_System_Calibration()
 	offset_cache1.gyro_offset[0] = 0;
 	offset_cache1.gyro_offset[1] = 0;
 	offset_cache1.gyro_offset[2] = 0;
-	//10 for average
+	offset_cache1.magnet_offset[0] = 0;
+	offset_cache1.magnet_offset[1] = 0;
+	offset_cache1.magnet_offset[2] = 0;
+	//300 for average
 	for (int i = 0; i < 300; ++i) {
 		//read Accel
 		MPU_Read_Accel();
@@ -153,11 +203,19 @@ void MPU_System_Calibration()
 			TransI16_2_float(cache1.gyro_Data[j], &tmpVal, GYROSCOPE_SENSITIVITY);
 			offset_cache1.gyro_offset[j] += tmpVal;
 		}
-		HAL_Delay(1);
+		//read Magnet
+		MPU_Read_Magnet();
+		for (char j = 0; j < 3; ++j) {
+			TransI16_2_float(cache1.magnet_Data[j], &tmpVal, MAGNET_SENSITIVITY);
+			maxValue[j] = tmpVal > maxValue[j] ? tmpVal : maxValue[j];
+			minValue[j] = tmpVal < minValue[j] ? tmpVal : minValue[j];
+		}
+		HAL_Delay(20);
 	}
 	for (char i = 0; i < 3; ++i) {
 		offset_cache1.accel_offset[i] /= 300.0f;
 		offset_cache1.gyro_offset[i] /= 300.0f;
+		offset_cache1.magnet_offset[i] = (maxValue[i] + minValue[i]) / 2;
 	}
 }
 
@@ -182,6 +240,15 @@ void MPU_Read_Gyro()
 	for (unsigned char i = 0; i < 6; i += 2) cache1.gyro_Data[i / 2] = ( (((unsigned char)result[i]) << 8) | ((unsigned char)result[i + 1]) );
 }
 
+void MPU_Read_Magnet()
+{
+	//datas
+	char result[6];
+	//read Magnet
+	IIC1ReadSlaveReg(result, 6, MAG_ADDR, MAGN_XOUT_H);
+	for (unsigned char i = 0; i < 6; i += 2) cache1.magnet_Data[i / 2] = ( (((unsigned char)result[i]) << 8) | ((unsigned char)result[i + 1]) );	
+}
+
 void MPU_Get_Accel(float* res)
 {
 	for (char i = 0; i < 3; ++i) {
@@ -196,6 +263,15 @@ void MPU_Get_Gyro(float* res)
 		TransI16_2_float(cache1.gyro_Data[i], &res[i], GYROSCOPE_SENSITIVITY);
 		res[i] -= offset_cache1.gyro_offset[i];
 	}
+}
+
+void MPU_Get_Magnet(float* res)
+{
+	for (char i = 0; i < 3; ++i) {
+		TransI16_2_float(cache1.magnet_Data[i], &res[i], MAGNET_SENSITIVITY);
+		res[i] -= offset_cache1.magnet_offset[i];
+	}
+	
 }
 
 #endif

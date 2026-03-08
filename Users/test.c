@@ -456,7 +456,8 @@ void MPU_Mag_Test()
 	//datas
 	char mag[3];
 	for (char i = 0; i < 3; ++i) mag[i] = 0;
-	char val[2];
+	char val[3];
+	val[2] = ' ';
 	
 	//Init comm protocol
 	IIC1_Init(0, 0);
@@ -467,15 +468,16 @@ void MPU_Mag_Test()
 	OLED_Init();
 	OLED_TurnOn_Screen();
 	OLED_Flash_Screen(0x00);
-	HAL_Delay(300);
 	//start test
-	IIC1ReadSlaveReg(mag, 3, 0x003c, 0x0A);
+	MPU_Init();
+	IIC1ReadSlaveReg(mag, 3, 0x003c, 0x00);
 	IIC1_Send_Block_Wait();
-	/*for (char i = 0; i < 3; ++i) {
+	
+	for (char i = 0; i < 3; ++i) {
 		TransNum2StringWOS(mag[i], val);
-		OLED_WriteIn_16x8String(i * 2, 0, 2, (unsigned char*)val);
-	}*/
-	OLED_WriteIn_16x8String(0,0,3, (unsigned char*)mag);
+		OLED_WriteIn_16x8String(i * 3, 0, 3, (unsigned char*)val);
+	}
+	
 	while(1);
 }
 #endif

@@ -13,6 +13,7 @@
 #define ATOM_VAR_API_EN
 #define TIM_COUNTER_API_EN
 #define MPU_API_EN
+#define NCP_API_EN
 //#define NRF2401_TEST
 //#define NRF2401_RECEIVER_TEST
 //#define NRF2401_SENDER_TEST
@@ -21,5 +22,6 @@
 //#define TIM_COUNTER_TEST
 //#define TIM_COUNTER_BASE_CASE1
 //#define OLED_TEST
-#define MPU_TEST
+//#define MPU_TEST
+#define NSCP_TEST
 #endif

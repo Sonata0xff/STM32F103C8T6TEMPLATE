@@ -76,7 +76,15 @@ void MPU_Accel_Test();
 void MPU_Mag_Test();
 #endif
 //----------------------------------------------------
-
-
-
+/*
+test case : NSCP
+*/
+#ifdef NSCP_TEST
+#include "stm32f1xx.h"                  // Device header
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_conf.h"
+#include "NSCP.h"
+void NSCP_Test();
+#endif
+//----------------------------------------------------
 #endif

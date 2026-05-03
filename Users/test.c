@@ -454,10 +454,8 @@ void MPU_Accel_Test()
 void MPU_Mag_Test()
 {
 	//datas
-	char mag[3];
-	for (char i = 0; i < 3; ++i) mag[i] = 0;
-	char val[3];
-	val[2] = ' ';
+	float magnet[3];
+	for (char i = 0; i < 3; ++i) magnet[i] = 0.0f;
 	
 	//Init comm protocol
 	IIC1_Init(0, 0);
@@ -470,15 +468,36 @@ void MPU_Mag_Test()
 	OLED_Flash_Screen(0x00);
 	//start test
 	MPU_Init();
-	IIC1ReadSlaveReg(mag, 3, 0x003c, 0x00);
+	MPU_Start();
+	MPU_System_Calibration();
+	while(1) {
+		MPU_Read_Magnet();
+		MPU_Get_Magnet(magnet);
+		TransFloat_2_Str(magnet[0], value_float);
+		OLED_WriteIn_16x8String(0, 0, 9, (unsigned char*)value_float);
+		TransFloat_2_Str(magnet[1], value_float);
+		OLED_WriteIn_16x8String(0, 1, 9, (unsigned char*)value_float);
+		TransFloat_2_Str(magnet[2], value_float);
+		OLED_WriteIn_16x8String(0, 2, 9, (unsigned char*)value_float);
+		HAL_Delay(250);
+		
+	}
+	/*IIC1ReadSlaveReg(mag, 3, 0x003c, 0x00);
 	IIC1_Send_Block_Wait();
 	
 	for (char i = 0; i < 3; ++i) {
 		TransNum2StringWOS(mag[i], val);
 		OLED_WriteIn_16x8String(i * 3, 0, 3, (unsigned char*)val);
 	}
-	
-	while(1);
+	while(1);*/
+}
+#endif
+//----------------------------------------------------
+#ifdef NSCP_TEST
+#define TEST_NULL 0
+void NSCP_Test()
+{
+	NSCP_Sender_Init(TEST_NULL);
 }
 #endif
 //----------------------------------------------------

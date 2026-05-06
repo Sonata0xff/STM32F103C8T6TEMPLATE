@@ -11,7 +11,7 @@
 #define START_UP_API_EN
 #define GPIO_EXIT_API_EN
 #define ATOM_VAR_API_EN
-#define TIM_COUNTER_API_EN
+//#define TIM_COUNTER_API_EN
 #define MPU_API_EN
 #define NCP_API_EN
 //#define NRF2401_TEST

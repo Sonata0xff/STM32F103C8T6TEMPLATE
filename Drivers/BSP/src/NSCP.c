@@ -1,18 +1,22 @@
 #include "NSCP.h"
-#include "OLED.h"
 #ifdef NCP_API_EN
 
 void NSCP_Sender_Init(NSCP_ConfigTypeDef* comm_conf)
 {
-	unsigned char title[] = "NSCP Call test";
-	int size = 14;
-	OLED_WriteIn_16x8String(0, 0, size, title);
+	if (comm_conf == NSCP_NULL) return;
+	if (comm_conf->tmp_status != NSCP_ON) return;
+	//init code.
+	//...
+	//init code end.
+	comm_conf->tmp_status = NSCP_READY;
 }
 
 //NSCP data block init
 void NSCP_Sender_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 {
-	
+	if (comm_conf == NSCP_NULL) return;
+	comm_conf->data = 0x00;
+	comm_conf->tmp_status = NSCP_ON;
 }
 
 //NSCP sender load in datas. 

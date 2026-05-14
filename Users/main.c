@@ -6,7 +6,7 @@
 #include "OLED.h"
 #include "IIC.h"
 
-TIM_OC_InitTypeDef pwm_ch_conf = {
+/*TIM_OC_InitTypeDef pwm_ch_conf = {
 		.OCMode = TIM_OCMODE_PWM1,
 		.Pulse = 0, // 2 pulse
 		.OCPolarity = TIM_OCPOLARITY_HIGH,
@@ -33,31 +33,24 @@ TIM_HandleTypeDef pwm_conf = {
 		.hdma[TIM_DMA_ID_CC2] = &dma_han
 };
 
-uint16_t dutyCArry[4] = {2, 8, 2, 8};
+uint16_t dutyCArry[4] = {2, 8, 2, 8};*/
 
 int main()
 {
 	//stand process
 	Standard_process();
-	
-	IIC1_Init(0, 0);
-	OLED_Init();
-	
-	OLED_TurnOn_Screen();
-	
-	OLED_Flash_Screen(0x00);
-	
+
 	//work code
 	//pwm init
-	HAL_TIM_PWM_Init(&pwm_conf);
-	HAL_TIM_PWM_ConfigChannel(&pwm_conf, &pwm_ch_conf, TIM_CHANNEL_2);
-	HAL_TIM_PWM_Start_DMA(&pwm_conf, TIM_CHANNEL_2, (uint32_t*)dutyCArry, 4);
-	while(1);
+	//HAL_TIM_PWM_Init(&pwm_conf);
+	//HAL_TIM_PWM_ConfigChannel(&pwm_conf, &pwm_ch_conf, TIM_CHANNEL_2);
+	//HAL_TIM_PWM_Start_DMA(&pwm_conf, TIM_CHANNEL_2, (uint32_t*)dutyCArry, 4);
+	NSCP_Init_Test();
 	//work code end
 	return 0;
 }
 
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
+/*void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 {
 	__HAL_RCC_DMA1_CLK_ENABLE();
 	__HAL_RCC_TIM2_CLK_ENABLE();
@@ -79,15 +72,15 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 	HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 }
 
-void DMA1_Channel7_IRQHandler()
-{
-	HAL_DMA_IRQHandler(&dma_han);
-}
+//void DMA1_Channel7_IRQHandler()
+//{
+//	HAL_DMA_IRQHandler(&dma_han);
+//}
 
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
-{
-  if(htim->Instance == TIM2)
-  {
-    HAL_TIM_PWM_Stop_DMA(&pwm_conf, TIM_CHANNEL_2);
-  }
-}
+//void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+//{
+//  if(htim->Instance == TIM2)
+//  {
+//    HAL_TIM_PWM_Stop_DMA(&pwm_conf, TIM_CHANNEL_2);
+//  }
+//}*/

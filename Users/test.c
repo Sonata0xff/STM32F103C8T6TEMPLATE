@@ -495,9 +495,58 @@ void MPU_Mag_Test()
 //----------------------------------------------------
 #ifdef NSCP_TEST
 #define TEST_NULL 0
-void NSCP_Test()
+
+TIM_OC_InitTypeDef pwm_ch_conf;
+DMA_HandleTypeDef dma_han;
+TIM_HandleTypeDef pwm_conf;
+GPIO_InitTypeDef gpio_conf;
+
+void rcc_init()
 {
-	NSCP_Sender_Init(TEST_NULL);
+	__HAL_RCC_DMA1_CLK_ENABLE();
+	__HAL_RCC_TIM2_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 }
+
+void NSCP_Init_Test()
+{
+	uint16_t dutyCArry[5] = {1, 4, 1, 4, 0};
+	//gpio init
+	NSCP_ConfigTypeDef nscp_init = {
+		.Channel = TIM_CHANNEL_2,
+		.one_period = 4,
+		.period = 5,//2.5us
+		.sda_pin = GPIO_PIN_1,
+		.tim_cc_id = TIM_DMA_ID_CC2,
+		.dma_ir_handle = DMA1_Channel7_IRQn,
+		.dma_conf = DMA1_Channel7,
+		.tim_conf = TIM2,
+		.sda_gpio_handle = GPIOA,
+		.func_handle = rcc_init,
+		
+		.pwm_channel_handle = &pwm_ch_conf,
+		.dma_handle = &dma_han,
+		.pwm_handle = &pwm_conf,
+		.sda_handle = &gpio_conf
+	};
+	NSCP_Sender_Config_Init(&nscp_init);
+	NSCP_Sender_Init(&nscp_init);
+	HAL_TIM_PWM_Start_DMA(&pwm_conf, TIM_CHANNEL_2, (uint32_t*)dutyCArry, 5);
+	while(1);
+}
+
+void DMA1_Channel7_IRQHandler()
+{
+	HAL_DMA_IRQHandler(&dma_han);
+}
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == TIM2)
+  {
+    HAL_TIM_PWM_Stop_DMA(&pwm_conf, TIM_CHANNEL_2);
+  }
+}
+
 #endif
 //----------------------------------------------------

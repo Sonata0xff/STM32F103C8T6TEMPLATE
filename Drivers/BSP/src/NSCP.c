@@ -6,8 +6,8 @@ uint16_t duty_recv_buffer[11];
 uint16_t duty_send_buffer[11];
 void NSCP_Sender_Init(NSCP_ConfigTypeDef* comm_conf)
 {
-	if (comm_conf == NSCP_NULL) return;
-	if (comm_conf->tmp_status != NSCP_ON) return;
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_ON) return;
 	//init code.
 	//rcc enable
 	comm_conf->func_handle();
@@ -66,52 +66,95 @@ void NSCP_Sender_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 //NSCP sender load in datas. 
 void NSCP_Sender_Load_Data(NSCP_ConfigTypeDef* comm_conf)
 {
-	
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_READY) return;
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_LOADED;
 }
 
 //NSCP check the transport is clear, which means the data can be sent.
 //NSCP_TRANS_NO_CLEAR means receiver is still not ready, NSCP_TRANS_CLEAR means receiver is ready, transport is ready.
 uint8_t NSCP_Sender_Wait_For_Trans_Ready(NSCP_ConfigTypeDef* comm_conf)
 {
-	//This is not ready for now under coding ...
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_LOADED) return NSCP_TRANS_NO_CLEAR;
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_TRANS_READY;
 	return NSCP_TRANS_CLEAR;
 }
 
 //NSCP wait until the transport is clear, which means the data can be sent. Block-on wait.
 void NSCP_Sender_Wait_For_Trans_Ready_Sync(NSCP_ConfigTypeDef* comm_conf)
 {
-	//This is not ready for now under coding ...
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_LOADED) return;
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_TRANS_READY;
 	return;
 }
 
 //start the data transfer. async send.
 void NSCP_Sender_Trans_Launch(NSCP_ConfigTypeDef* comm_conf)
 {
-	
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_TRANS_READY) return;
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_TRANS_ON;
+	return;
 }
 
 //NSCP check the trnas is fin.NSCP_TRANS_NO_FIN means not , NSCP_TRANS_FIN means fin.
 uint8_t NSCP_Sender_Wait_For_Trans_Fin(NSCP_ConfigTypeDef* comm_conf)
 {
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_TRANS_ON) return NSCP_TRANS_NO_FIN;
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_TRANS_FIN;
 	return NSCP_TRANS_FIN;
 }
 
 //NSCP wait until the trnas is fin. Block-on wait.
 void NSCP_Sender_Wait_For_Trans_Fin_Sync(NSCP_ConfigTypeDef* comm_conf)
 {
-	
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_TRANS_ON) return;
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_TRANS_FIN;
+	return;
 }
 
 //NSCP handle finishing work after finish transport
 void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 {
-	
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_TRANS_FIN) return;
+	//load data
+	//coding ...
+	//load data end
+	NSCP_Sender_Reset_Trans(comm_conf);
+	return;
 }
 
 //NSCP reset the sender's transport.
 void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 {
-	
+	//load data
+	//coding ...
+	//load data end
+	comm_conf->tmp_status = NSCP_READY;
+	return;
 }
 
 #endif

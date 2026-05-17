@@ -9,6 +9,8 @@
 
 typedef void (*rcc_clock_init_func)(void);
 
+#define NSCP_MAX_PACK_LEN 11
+
 typedef enum {
 	NSCP_ON = 0,
 	NSCP_READY,
@@ -33,6 +35,9 @@ typedef struct {
 	rcc_clock_init_func 	func_handle;
 	
 	
+	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1];
+	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN + 1];
+	AtomVarType           send_lock;
 	NscpCommStatus 				tmp_status;
 	TIM_OC_InitTypeDef*		pwm_channel_handle;
 	DMA_HandleTypeDef*		dma_handle;
@@ -40,15 +45,12 @@ typedef struct {
 	GPIO_InitTypeDef*			sda_handle;
 } NSCP_ConfigTypeDef;
 
-
 #define NSCP_NULL 0
-#define NSCP_MAX_PACK_LEN 11
 #define NSCP_TRANS_CLEAR 1
 #define NSCP_TRANS_NO_CLEAR 0
 #define NSCP_TRANS_FIN 1
 #define NSCP_TRANS_NO_FIN 0
 #define NSCP_BIT_ONE 1
-
 
 //NSCP data block init
 //NSCP_ON
@@ -82,10 +84,5 @@ void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf);
 //NSCP reset the sender's transport.
 //NSCP_TRANS_FIN -> NSCP_READY
 void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf);
-
-//functional method, get receive buffer
-const uint16_t* NSCP_Get_Recv_Buf();
-//functional method, get send buffer
-const uint16_t* NSCP_Get_Send_Buf();
 #endif
 #endif

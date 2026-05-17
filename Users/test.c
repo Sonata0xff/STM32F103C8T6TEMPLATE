@@ -551,7 +551,7 @@ void NSCP_Send_Load_Test()
 	nscp_init.data = 0x555;
 	NSCP_Sender_Load_Data(&nscp_init);
 	HAL_TIM_PWM_Start_DMA(&pwm_conf, nscp_init.Channel,
-												(uint32_t*)NSCP_Get_Send_Buf(), NSCP_MAX_PACK_LEN + 1);
+												(uint32_t*)nscp_init.duty_send_buffer, NSCP_MAX_PACK_LEN + 1);
 	while(1);
 }
 
@@ -589,20 +589,8 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 #ifdef DELAY_COUNTER_TEST
 void DC_Init_Test()
 {
-	/*unsigned char title[] = "DC Test";
-	//init OLED
-	IIC1_Init(0, 0);
-	SetIIC_Comm_Mode(1);//Polling mode
-	OLED_Init();
-	OLED_TurnOn_Screen();
-	OLED_Flash_Screen(0x00);
 	
-	//start test
-	OLED_WriteIn_16x8String(0, 0, 7, (unsigned char *)title);
-	
-	//stuck
-	while(1);*/
-	timer_Init();
+	DC_Init(DC_NULL);
 	while(1);
 }
 #endif

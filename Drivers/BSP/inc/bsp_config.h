@@ -24,6 +24,6 @@
 //#define TIM_COUNTER_BASE_CASE1
 //#define OLED_TEST
 //#define MPU_TEST
-//#define NSCP_TEST
+#define NSCP_TEST
 #define DELAY_COUNTER_TEST
 #endif

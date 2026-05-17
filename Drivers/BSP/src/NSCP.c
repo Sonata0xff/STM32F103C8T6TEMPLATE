@@ -1,15 +1,6 @@
 #include "NSCP.h"
 #ifdef NSCP_API_EN
 
-//the datas buffer
-uint16_t duty_recv_buffer[NSCP_MAX_PACK_LEN + 1];
-uint16_t duty_send_buffer[NSCP_MAX_PACK_LEN + 1];
-
-//send lock, set is a lock.
-AtomVarType send_lock;
-//recv lock, set is a lock.
-AtomVarType recv_lock;
-
 void NSCP_Sender_Init(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
@@ -66,7 +57,7 @@ void NSCP_Sender_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->sda_handle->Pull = GPIO_NOPULL;
 	comm_conf->sda_handle->Speed = GPIO_SPEED_FREQ_HIGH;
 	//var init
-	Atom_Write(&send_lock, ATOM_VALUE_RESET);
+	Atom_Write(&comm_conf->send_lock, ATOM_VALUE_RESET);
 	//status init
 	comm_conf->tmp_status = NSCP_ON;
 }
@@ -78,10 +69,10 @@ void NSCP_Sender_Load_Data(NSCP_ConfigTypeDef* comm_conf)
 			comm_conf->tmp_status != NSCP_READY) return;
 	uint16_t bit_mask = 0x01;
 	for (unsigned char i = 0; i < NSCP_MAX_PACK_LEN; ++i) {
-		duty_send_buffer[i] = comm_conf->data & bit_mask ? comm_conf->one_period : (comm_conf->period - comm_conf->one_period);
+		comm_conf->duty_send_buffer[i] = comm_conf->data & bit_mask ? comm_conf->one_period : (comm_conf->period - comm_conf->one_period);
 		bit_mask <<= 1;
 	}
-	duty_send_buffer[NSCP_MAX_PACK_LEN] = 0;
+	comm_conf->duty_send_buffer[NSCP_MAX_PACK_LEN] = 0;
 	comm_conf->tmp_status = NSCP_LOADED;
 }
 
@@ -111,10 +102,10 @@ void NSCP_Sender_Trans_Launch(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_TRANS_READY) return;
-	Atom_Write(&send_lock, ATOM_VALUE_SET);
+	Atom_Write(&comm_conf->send_lock, ATOM_VALUE_SET);
 	HAL_TIM_PWM_Start_DMA(comm_conf->pwm_handle,
 												comm_conf->Channel,
-												(uint32_t*)duty_send_buffer,
+												(uint32_t*)comm_conf->duty_send_buffer,
 												NSCP_MAX_PACK_LEN + 1);
 	comm_conf->tmp_status = NSCP_TRANS_ON;
 	return;
@@ -125,7 +116,7 @@ uint8_t NSCP_Sender_Wait_For_Trans_Fin(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_TRANS_ON) return NSCP_TRANS_NO_FIN;
-	if (Atom_Read(&send_lock) == ATOM_VALUE_RESET) {
+	if (Atom_Read(&comm_conf->send_lock) == ATOM_VALUE_RESET) {
 		comm_conf->tmp_status = NSCP_TRANS_FIN;
 		return NSCP_TRANS_FIN;
 	} else return NSCP_TRANS_NO_FIN;
@@ -136,7 +127,7 @@ void NSCP_Sender_Wait_For_Trans_Fin_Sync(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_TRANS_ON) return;
-	while(Atom_Read(&send_lock) == ATOM_VALUE_SET);
+	while(Atom_Read(&comm_conf->send_lock) == ATOM_VALUE_SET);
 	comm_conf->tmp_status = NSCP_TRANS_FIN;
 	return;
 }
@@ -146,7 +137,7 @@ void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_TRANS_FIN) return;
-	Atom_Write(&send_lock, ATOM_VALUE_RESET);
+	Atom_Write(&comm_conf->send_lock, ATOM_VALUE_RESET);
 	NSCP_Sender_Reset_Trans(comm_conf);
 	return;
 }
@@ -156,15 +147,5 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 {
 	comm_conf->tmp_status = NSCP_READY;
 	return;
-}
-
-const uint16_t* NSCP_Get_Recv_Buf()
-{
-	return duty_recv_buffer;
-}
-
-const uint16_t* NSCP_Get_Send_Buf()
-{
-	return duty_send_buffer;
 }
 #endif

@@ -1,8 +1,7 @@
 #include "delay_counter.h"
 #ifdef DELAY_COUNTER_API_EN
-//coding ...
 
-TIM_HandleTypeDef htim = {
+/*TIM_HandleTypeDef htim = {
 		.Instance = TIM4,
 		.Init.Prescaler = 72 - 1, // 1Mhz
 		.Init.CounterMode = TIM_COUNTERMODE_UP,
@@ -10,16 +9,38 @@ TIM_HandleTypeDef htim = {
 		.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1,
 		.Init.RepetitionCounter = 0,
 		.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE
-};
+};*/
 
-void timer_Init()
+
+void DC_Init(DelayCounter_ConfigTypeDef* conf)
 {
-	HAL_TIM_Base_Init(&htim);
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
-	HAL_TIM_Base_Start_IT(&htim);
+	if (conf == DC_NULL) return;
+	//rcc init
+	conf->rcc_init_func();
+	//tim init
+	conf->htim->Instance = conf->tim_conf;
+	conf->htim->Init.Prescaler = DC_PRESCALER - 1; // 1Mhz
+	conf->htim->Init.CounterMode = TIM_COUNTERMODE_UP;
+	conf->htim->Init.Period = DC_ZERO;
+	conf->htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	conf->htim->Init.RepetitionCounter = DC_ZERO;
+	conf->htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	HAL_TIM_Base_Init(conf->htim);
+	//nvic init
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+	HAL_NVIC_SetPriority(conf->ir_handle, 1, 1);
+	HAL_NVIC_EnableIRQ(conf->ir_handle);
+	//HAL_TIM_Base_Init(&htim);
+	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	//HAL_TIM_Base_Start_IT(&htim);
 }
 
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+void DC_Delay(DelayCounter_ConfigTypeDef* conf)
+{
+	
+}
+
+/*void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 {
 	__HAL_RCC_TIM4_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -34,9 +55,9 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(TIM4_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ(TIM4_IRQn);
-}
+}*/
 
-void TIM4_IRQHandler()
+/*void TIM4_IRQHandler()
 {
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 	HAL_TIM_IRQHandler(&htim);
@@ -45,6 +66,6 @@ void TIM4_IRQHandler()
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	HAL_TIM_Base_Stop_IT(htim);
-}
+}*/
 
 #endif

@@ -589,7 +589,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 #ifdef DELAY_COUNTER_TEST
 void DC_Init_Test()
 {
-	unsigned char title[] = "DC Test";
+	/*unsigned char title[] = "DC Test";
 	//init OLED
 	IIC1_Init(0, 0);
 	SetIIC_Comm_Mode(1);//Polling mode
@@ -601,6 +601,8 @@ void DC_Init_Test()
 	OLED_WriteIn_16x8String(0, 0, 7, (unsigned char *)title);
 	
 	//stuck
+	while(1);*/
+	timer_Init();
 	while(1);
 }
 #endif

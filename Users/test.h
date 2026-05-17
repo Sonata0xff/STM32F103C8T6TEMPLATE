@@ -96,6 +96,7 @@ test case : delay counter
 #include "stm32f1xx.h"                  // Device header
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_conf.h"
+#include "delay_counter.h"
 #include "IIC.h"
 #include "OLED.h"
 

@@ -1,10 +1,11 @@
 #include "bsp_config.h"
-#ifdef NCP_API_EN
+#ifdef NSCP_API_EN
 #ifndef NSCP_H
 #define NSCP_H
 
 #include "stm32f1xx.h"                  // Device header
 #include "stm32f1xx_hal.h"
+#include "AtomVariable.h"
 
 typedef void (*rcc_clock_init_func)(void);
 
@@ -82,5 +83,9 @@ void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf);
 //NSCP_TRANS_FIN -> NSCP_READY
 void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf);
 
+//functional method, get receive buffer
+const uint16_t* NSCP_Get_Recv_Buf();
+//functional method, get send buffer
+const uint16_t* NSCP_Get_Send_Buf();
 #endif
 #endif

@@ -500,6 +500,13 @@ TIM_OC_InitTypeDef pwm_ch_conf;
 DMA_HandleTypeDef dma_han;
 TIM_HandleTypeDef pwm_conf;
 GPIO_InitTypeDef gpio_conf;
+typedef void (*post_handle_func)(NSCP_ConfigTypeDef*);
+post_handle_func post_func_ptr;
+
+void empty_post_handle(NSCP_ConfigTypeDef* conf)
+{
+	(void)conf;
+}
 
 void rcc_init()
 {
@@ -508,11 +515,7 @@ void rcc_init()
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 }
 
-void NSCP_Init_Test()
-{
-	uint16_t dutyCArry[5] = {1, 4, 1, 4, 0};
-	//gpio init
-	NSCP_ConfigTypeDef nscp_init = {
+NSCP_ConfigTypeDef nscp_init = {
 		.Channel = TIM_CHANNEL_2,
 		.one_period = 4,
 		.period = 5,//2.5us
@@ -528,10 +531,42 @@ void NSCP_Init_Test()
 		.dma_handle = &dma_han,
 		.pwm_handle = &pwm_conf,
 		.sda_handle = &gpio_conf
-	};
+};
+
+void NSCP_Send_Init_Test()
+{
+	post_func_ptr = empty_post_handle;
+	uint16_t dutyCArry[5] = {1, 4, 1, 4, 0};
 	NSCP_Sender_Config_Init(&nscp_init);
 	NSCP_Sender_Init(&nscp_init);
 	HAL_TIM_PWM_Start_DMA(&pwm_conf, TIM_CHANNEL_2, (uint32_t*)dutyCArry, 5);
+	while(1);
+}
+
+void NSCP_Send_Load_Test()
+{
+	post_func_ptr = empty_post_handle;
+	NSCP_Sender_Config_Init(&nscp_init);
+	NSCP_Sender_Init(&nscp_init);
+	nscp_init.data = 0x555;
+	NSCP_Sender_Load_Data(&nscp_init);
+	HAL_TIM_PWM_Start_DMA(&pwm_conf, nscp_init.Channel,
+												(uint32_t*)NSCP_Get_Send_Buf(), NSCP_MAX_PACK_LEN + 1);
+	while(1);
+}
+
+void NSCP_Send_Full_Send_Test()
+{
+	post_func_ptr = NSCP_Sender_Trans_Post_Handle;
+	NSCP_Sender_Config_Init(&nscp_init);
+	NSCP_Sender_Init(&nscp_init);
+	nscp_init.data = 0x555;
+	NSCP_Sender_Load_Data(&nscp_init);
+	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
+	NSCP_Sender_Trans_Launch(&nscp_init);
+	while (NSCP_Sender_Wait_For_Trans_Fin(&nscp_init) == NSCP_TRANS_NO_FIN) {
+		HAL_Delay(1);
+	}
 	while(1);
 }
 
@@ -545,8 +580,28 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   if(htim->Instance == TIM2)
   {
     HAL_TIM_PWM_Stop_DMA(&pwm_conf, TIM_CHANNEL_2);
+		post_func_ptr(&nscp_init);
   }
 }
 
+#endif
+
+#ifdef DELAY_COUNTER_TEST
+void DC_Init_Test()
+{
+	unsigned char title[] = "DC Test";
+	//init OLED
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//start test
+	OLED_WriteIn_16x8String(0, 0, 7, (unsigned char *)title);
+	
+	//stuck
+	while(1);
+}
 #endif
 //----------------------------------------------------

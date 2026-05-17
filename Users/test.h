@@ -84,7 +84,23 @@ test case : NSCP
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_conf.h"
 #include "NSCP.h"
-void NSCP_Init_Test();
+void NSCP_Send_Init_Test();
+void NSCP_Send_Load_Test();
+void NSCP_Send_Full_Send_Test();
+#endif
+//----------------------------------------------------
+/*
+test case : delay counter
+*/
+#ifdef DELAY_COUNTER_TEST
+#include "stm32f1xx.h"                  // Device header
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_conf.h"
+#include "IIC.h"
+#include "OLED.h"
+
+//coding ...
+void DC_Init_Test();
 #endif
 //----------------------------------------------------
 #endif

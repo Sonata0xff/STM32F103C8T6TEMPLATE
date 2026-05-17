@@ -20,5 +20,9 @@ AtomVarType Atom_Change(AtomVarType* var, AtomVarType value);
 void Atom_Add(AtomVarType* var, AtomVarType value);
 
 void Atom_Sub(AtomVarType* var, AtomVarType value);
+
+//This two func must be used as a pair to set the block sector.
+uint32_t Atom_Block_Start();
+void Atom_Block_Stop(uint32_t primask);
 #endif
 #endif

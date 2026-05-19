@@ -3,16 +3,16 @@
 #ifndef BSP_CONFIG_H
 #define BSP_CONFIG_H
 
-#define IIC_API_EN
-#define OLED_API_EN
-#define ISPI_API_EN
-#define NRF2401_API_EN
+//#define IIC_API_EN
+//#define OLED_API_EN
+//#define ISPI_API_EN
+//#define NRF2401_API_EN
 #define UTILS_API_EN
 #define START_UP_API_EN
-#define GPIO_EXIT_API_EN
+//#define GPIO_EXIT_API_EN
 #define ATOM_VAR_API_EN
 //#define TIM_COUNTER_API_EN
-#define MPU_API_EN
+//#define MPU_API_EN
 #define NSCP_API_EN
 #define DELAY_COUNTER_API_EN
 //#define NRF2401_TEST
@@ -25,5 +25,5 @@
 //#define OLED_TEST
 //#define MPU_TEST
 #define NSCP_TEST
-#define DELAY_COUNTER_TEST
+//#define DELAY_COUNTER_TEST
 #endif

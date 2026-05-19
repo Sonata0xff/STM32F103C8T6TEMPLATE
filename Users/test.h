@@ -101,7 +101,10 @@ test case : delay counter
 #include "OLED.h"
 
 //coding ...
-void DC_Init_Test();
+void DC_COUNT_Test();
+void DC_Repeat_Count_Test1();
+void DC_Repeat_Count_Test2();
+void DC_Repeat_Count_Test3();
 #endif
 //----------------------------------------------------
 #endif

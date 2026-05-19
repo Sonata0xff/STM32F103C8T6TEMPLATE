@@ -21,8 +21,10 @@ typedef enum {
 } NscpCommStatus;
 
 typedef struct {
+	//send data
 	uint16_t data;
 	
+	//usr conf
 	uint32_t 							Channel;
 	uint32_t							one_period;
 	uint32_t 							period;
@@ -34,7 +36,7 @@ typedef struct {
 	GPIO_TypeDef*					sda_gpio_handle;
 	rcc_clock_init_func 	func_handle;
 	
-	
+	//sys conf
 	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1];
 	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN + 1];
 	AtomVarType           send_lock;

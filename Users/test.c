@@ -587,11 +587,136 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 #endif
 
 #ifdef DELAY_COUNTER_TEST
-void DC_Init_Test()
+
+void rcc_init_func()
 {
+	__HAL_RCC_TIM4_CLK_ENABLE();
+}
+
+void count_up_func()
+{
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+}
+
+TIM_HandleTypeDef httmi;
+
+DelayCounter_ConfigTypeDef conf = {
+	.tim_conf = TIM4,
+	.rcc_init_func = rcc_init_func,
+	.ir_handle = TIM4_IRQn,
+	.tim_handle_func = count_up_func,
 	
-	DC_Init(DC_NULL);
+	.htim = &httmi
+};
+
+void DC_COUNT_Test()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//delay counter init
+	DC_Init(&conf);
+	
+	//test
+	conf.period = 7;//7us
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+	DC_Delay(&conf);
+	__DSB();
 	while(1);
+}
+
+void DC_Repeat_Count_Test1()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//delay counter init
+	DC_Init(&conf);
+	
+	//test
+	conf.period = 10;
+	for (int i = 0; i < 10; ++i) {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		DC_Delay(&conf);
+		DC_Wait_Sync(&conf);
+	}
+	while(1);
+}
+
+void DC_Repeat_Count_Test2()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//delay counter init
+	DC_Init(&conf);
+	
+	//test
+	conf.period = 6;//start from 7us
+	for (int i = 0; i < 10; ++i) {
+		conf.period += 1;
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		DC_Delay(&conf);
+		DC_Wait_Sync(&conf);
+	}
+	while(1);
+}
+
+void DC_Repeat_Count_Test3()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//delay counter init
+	DC_Init(&conf);
+	
+	//test
+	conf.period = 6;//start from 7us
+	for (int i = 0; i < 10; ++i) {
+		conf.period += 1;
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		DC_Delay(&conf);
+		while(DC_Wait(&conf) == DC_BUZY);
+	}
+	while(1);
+}
+
+void TIM4_IRQHandler()
+{
+	DC_IRQ_Handle_Func(&conf);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	HAL_TIM_Base_Stop_IT(htim);
 }
 #endif
 //----------------------------------------------------

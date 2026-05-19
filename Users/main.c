@@ -12,6 +12,6 @@ int main()
 	Standard_process();
 
 	//work code
-	DC_Init_Test();
+	DC_Repeat_Count_Test3();
 	return 0;
 }

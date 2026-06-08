@@ -87,6 +87,8 @@ test case : NSCP
 void NSCP_Send_Init_Test();
 void NSCP_Send_Load_Test();
 void NSCP_Send_Full_Send_Test();
+void NSCP_Send_Full_Send_Test2();
+void NSCP_Send_Full_Send_Test3();
 #endif
 //----------------------------------------------------
 /*
@@ -105,6 +107,8 @@ void DC_COUNT_Test();
 void DC_Repeat_Count_Test1();
 void DC_Repeat_Count_Test2();
 void DC_Repeat_Count_Test3();
+void DC_Repeat_Count_Test4(); // nscp fake env test1
+void DC_Repeat_Count_Test5(); // nscp fake env test2
 #endif
 //----------------------------------------------------
 #endif

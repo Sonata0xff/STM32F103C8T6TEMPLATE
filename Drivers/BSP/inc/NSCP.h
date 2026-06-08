@@ -6,6 +6,7 @@
 #include "stm32f1xx.h"                  // Device header
 #include "stm32f1xx_hal.h"
 #include "AtomVariable.h"
+#include "delay_counter.h"
 
 typedef void (*rcc_clock_init_func)(void);
 
@@ -17,7 +18,9 @@ typedef enum {
 	NSCP_LOADED,
 	NSCP_TRANS_READY,
 	NSCP_TRANS_ON,
-	NSCP_TRANS_FIN
+	NSCP_TRANS_FIN,
+	NSCP_LISTEN_ON,
+	NSCP_LISTEN_OFF
 } NscpCommStatus;
 
 typedef struct {
@@ -35,6 +38,7 @@ typedef struct {
 	TIM_TypeDef*				 	tim_conf;
 	GPIO_TypeDef*					sda_gpio_handle;
 	rcc_clock_init_func 	func_handle;
+	DelayCounter_ConfigTypeDef* gap_timer;
 	
 	//sys conf
 	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1];
@@ -53,7 +57,11 @@ typedef struct {
 #define NSCP_TRANS_FIN 1
 #define NSCP_TRANS_NO_FIN 0
 #define NSCP_BIT_ONE 1
+#define NSCP_DELAY_GAP 8 //8us
 
+/*
+NSCP Sender API
+*/
 //NSCP data block init
 //NSCP_ON
 void NSCP_Sender_Config_Init(NSCP_ConfigTypeDef* comm_conf);
@@ -86,5 +94,13 @@ void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf);
 //NSCP reset the sender's transport.
 //NSCP_TRANS_FIN -> NSCP_READY
 void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf);
+
+
+/*
+NSCP recv API
+*/
+
+
+
 #endif
 #endif

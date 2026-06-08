@@ -3,8 +3,8 @@
 #ifndef BSP_CONFIG_H
 #define BSP_CONFIG_H
 
-//#define IIC_API_EN
-//#define OLED_API_EN
+#define IIC_API_EN
+#define OLED_API_EN
 //#define ISPI_API_EN
 //#define NRF2401_API_EN
 #define UTILS_API_EN
@@ -22,7 +22,7 @@
 //#define NRF_COMM_CASE1_RECV
 //#define TIM_COUNTER_TEST
 //#define TIM_COUNTER_BASE_CASE1
-//#define OLED_TEST
+#define OLED_TEST
 //#define MPU_TEST
 #define NSCP_TEST
 //#define DELAY_COUNTER_TEST

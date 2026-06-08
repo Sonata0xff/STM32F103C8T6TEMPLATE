@@ -508,6 +508,33 @@ void empty_post_handle(NSCP_ConfigTypeDef* conf)
 	(void)conf;
 }
 
+//gap timer config
+void rcc_init_func()
+{
+	__HAL_RCC_TIM4_CLK_ENABLE();
+}
+
+TIM_HandleTypeDef htmi_nscp_gap_conf;
+
+DelayCounter_ConfigTypeDef gap_timer = {
+	.tim_conf = TIM4,
+	.rcc_init_func = rcc_init_func,
+	.ir_handle = TIM4_IRQn,
+	.tim_handle_func = DC_NULL,
+	.htim = &htmi_nscp_gap_conf
+};
+
+void TIM4_IRQHandler()
+{
+	DC_IRQ_Handle_Func(&gap_timer);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	HAL_TIM_Base_Stop_IT(htim);
+}
+//gap timer config end
+
 void rcc_init()
 {
 	__HAL_RCC_DMA1_CLK_ENABLE();
@@ -526,6 +553,7 @@ NSCP_ConfigTypeDef nscp_init = {
 		.tim_conf = TIM2,
 		.sda_gpio_handle = GPIOA,
 		.func_handle = rcc_init,
+		.gap_timer = &gap_timer,
 		
 		.pwm_channel_handle = &pwm_ch_conf,
 		.dma_handle = &dma_han,
@@ -565,8 +593,70 @@ void NSCP_Send_Full_Send_Test()
 	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
 	NSCP_Sender_Trans_Launch(&nscp_init);
 	while (NSCP_Sender_Wait_For_Trans_Fin(&nscp_init) == NSCP_TRANS_NO_FIN) {
-		HAL_Delay(1);
+		//HAL_Delay(1);
 	}
+	while(1);
+}
+
+void NSCP_Send_Full_Send_Test2()
+{
+	post_func_ptr = NSCP_Sender_Trans_Post_Handle;
+	NSCP_Sender_Config_Init(&nscp_init);
+	NSCP_Sender_Init(&nscp_init);
+	
+	GPIO_InitTypeDef check_port = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &check_port);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	nscp_init.data = 0x555;
+	NSCP_Sender_Load_Data(&nscp_init);
+	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
+	NSCP_Sender_Trans_Launch(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	NSCP_Sender_Wait_For_Trans_Fin_Sync(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	while(1);
+}
+
+void NSCP_Send_Full_Send_Test3()
+{
+	post_func_ptr = NSCP_Sender_Trans_Post_Handle;
+	NSCP_Sender_Config_Init(&nscp_init);
+	NSCP_Sender_Init(&nscp_init);
+	
+	GPIO_InitTypeDef check_port = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &check_port);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	nscp_init.data = 0x555;
+	NSCP_Sender_Load_Data(&nscp_init);
+	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
+	NSCP_Sender_Trans_Launch(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	NSCP_Sender_Wait_For_Trans_Fin_Sync(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	nscp_init.data = 0x7ff;
+	NSCP_Sender_Load_Data(&nscp_init);
+	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
+	NSCP_Sender_Trans_Launch(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	NSCP_Sender_Wait_For_Trans_Fin_Sync(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	nscp_init.data = 0x000;
+	NSCP_Sender_Load_Data(&nscp_init);
+	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
+	NSCP_Sender_Trans_Launch(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	NSCP_Sender_Wait_For_Trans_Fin_Sync(&nscp_init);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 	while(1);
 }
 
@@ -673,7 +763,7 @@ void DC_Repeat_Count_Test2()
 	DC_Init(&conf);
 	
 	//test
-	conf.period = 6;//start from 7us
+	conf.period = 7;//start from 7us
 	for (int i = 0; i < 10; ++i) {
 		conf.period += 1;
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
@@ -699,7 +789,7 @@ void DC_Repeat_Count_Test3()
 	DC_Init(&conf);
 	
 	//test
-	conf.period = 6;//start from 7us
+	conf.period = 7;//start from 7us
 	for (int i = 0; i < 10; ++i) {
 		conf.period += 1;
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
@@ -707,6 +797,60 @@ void DC_Repeat_Count_Test3()
 		while(DC_Wait(&conf) == DC_BUZY);
 	}
 	while(1);
+}
+
+void DC_Repeat_Count_Test4()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	
+	//delay counter init
+	DC_Init(&conf);
+	
+	//test
+	conf.period = 8; // standard gap is 8us
+	for (int i = 1; i <= 4; ++i) {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		DC_Delay(&conf);
+		while(DC_Wait(&conf) == DC_BUZY);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		for (int j = 0; j < 50; j++);
+	}
+}
+
+void DC_Repeat_Count_Test5()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	
+	//delay counter init
+	DC_Init(&conf);
+	
+	//test
+	conf.period = 8; // standard gap is 8us
+	for (int i = 1; i <= 4; ++i) {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		DC_Delay(&conf);
+		DC_Wait_Sync(&conf);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		for (int j = 0; j < 50; j++);
+	}
 }
 
 void TIM4_IRQHandler()

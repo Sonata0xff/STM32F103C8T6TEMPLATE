@@ -12,6 +12,6 @@ int main()
 	Standard_process();
 
 	//work code
-	DC_Repeat_Count_Test3();
+	NSCP_Send_Full_Send_Test3();
 	return 0;
 }

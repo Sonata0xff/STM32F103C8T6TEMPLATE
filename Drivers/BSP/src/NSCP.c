@@ -21,6 +21,9 @@ void NSCP_Sender_Init(NSCP_ConfigTypeDef* comm_conf)
 	//tim init
 	HAL_TIM_PWM_Init(comm_conf->pwm_handle);
 	HAL_TIM_PWM_ConfigChannel(comm_conf->pwm_handle, comm_conf->pwm_channel_handle, comm_conf->Channel);
+	//delay timer init
+	DC_Init(comm_conf->gap_timer);
+	comm_conf->gap_timer->period = NSCP_DELAY_GAP;
 	//init code end.
 	comm_conf->tmp_status = NSCP_READY;
 }
@@ -82,7 +85,7 @@ uint8_t NSCP_Sender_Wait_For_Trans_Ready(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LOADED) return NSCP_TRANS_NO_CLEAR;
-	//coding ...
+	if (DC_Wait(comm_conf->gap_timer) == DC_BUZY) return NSCP_TRANS_NO_CLEAR;
 	comm_conf->tmp_status = NSCP_TRANS_READY;
 	return NSCP_TRANS_CLEAR;
 }
@@ -92,7 +95,7 @@ void NSCP_Sender_Wait_For_Trans_Ready_Sync(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LOADED) return;
-	//coding ...
+	DC_Wait_Sync(comm_conf->gap_timer);
 	comm_conf->tmp_status = NSCP_TRANS_READY;
 	return;
 }
@@ -115,9 +118,8 @@ void NSCP_Sender_Trans_Launch(NSCP_ConfigTypeDef* comm_conf)
 uint8_t NSCP_Sender_Wait_For_Trans_Fin(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
-			comm_conf->tmp_status != NSCP_TRANS_ON) return NSCP_TRANS_NO_FIN;
+			comm_conf->tmp_status != NSCP_TRANS_ON) return NSCP_TRANS_FIN;
 	if (Atom_Read(&comm_conf->send_lock) == ATOM_VALUE_RESET) {
-		comm_conf->tmp_status = NSCP_TRANS_FIN;
 		return NSCP_TRANS_FIN;
 	} else return NSCP_TRANS_NO_FIN;
 }
@@ -128,7 +130,6 @@ void NSCP_Sender_Wait_For_Trans_Fin_Sync(NSCP_ConfigTypeDef* comm_conf)
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_TRANS_ON) return;
 	while(Atom_Read(&comm_conf->send_lock) == ATOM_VALUE_SET);
-	comm_conf->tmp_status = NSCP_TRANS_FIN;
 	return;
 }
 
@@ -136,8 +137,9 @@ void NSCP_Sender_Wait_For_Trans_Fin_Sync(NSCP_ConfigTypeDef* comm_conf)
 void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
-			comm_conf->tmp_status != NSCP_TRANS_FIN) return;
+			comm_conf->tmp_status != NSCP_TRANS_ON) return;
 	Atom_Write(&comm_conf->send_lock, ATOM_VALUE_RESET);
+	comm_conf->tmp_status = NSCP_TRANS_FIN;
 	NSCP_Sender_Reset_Trans(comm_conf);
 	return;
 }
@@ -145,7 +147,10 @@ void NSCP_Sender_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 //NSCP reset the sender's transport.
 void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 {
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_TRANS_FIN) return;
 	comm_conf->tmp_status = NSCP_READY;
+	DC_Delay(comm_conf->gap_timer);
 	return;
 }
 #endif

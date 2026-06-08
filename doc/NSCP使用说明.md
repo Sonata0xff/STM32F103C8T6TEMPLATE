@@ -42,7 +42,7 @@ DMA要搬运的是将对应GPIO口的数据搬运到自己设置的通信缓存�
 
 二、具体使用方式：
 (1)nscp使用地位先行的诗句传输模式，数据类型为uint11_t，承载数据类型为uint16_t
-(2)NSCP状态机：
+(2)NSCP状态机：发送者
 NSCP_ON -> NSCP_READY -> NSCP_LOADED
                 ^             |
                 |             √
@@ -50,4 +50,14 @@ NSCP_ON -> NSCP_READY -> NSCP_LOADED
                 |             |
                 |             √
         NSCP_TRANS_FIN  <- NSCP_TRANS_ON
+
+(3)NSCP状态机：接收者
+NSCP_ON -> NSCP_READY -> NSCP_LISTEN_ON
+                ^              |
+                |              √
+                |         NSCP_LISTEN_OFF
+                |              |
+                |              √
+                ------------ NSCP_TRANS_FIN
+                         
                          

@@ -56,7 +56,7 @@ uint8_t DC_Wait(DelayCounter_ConfigTypeDef* conf)
 //interrupt funcs
 void DC_IRQ_Handle_Func(DelayCounter_ConfigTypeDef* conf)
 {
-	conf->tim_handle_func();
+	if (conf->tim_handle_func != DC_NULL)conf->tim_handle_func();
 	Atom_Write(&conf->timer_lock, ATOM_VALUE_RESET);
 	HAL_TIM_IRQHandler(conf->htim);
 }

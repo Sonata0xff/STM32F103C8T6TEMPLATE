@@ -84,11 +84,14 @@ test case : NSCP
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_conf.h"
 #include "NSCP.h"
+#include "OLED.h"
 void NSCP_Send_Init_Test();
 void NSCP_Send_Load_Test();
 void NSCP_Send_Full_Send_Test();
 void NSCP_Send_Full_Send_Test2();
 void NSCP_Send_Full_Send_Test3();
+
+void NSCP_Recv_Init_Test(); //receiver test
 #endif
 //----------------------------------------------------
 /*

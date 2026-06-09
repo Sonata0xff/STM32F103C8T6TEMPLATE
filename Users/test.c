@@ -659,6 +659,58 @@ void NSCP_Send_Full_Send_Test3()
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 	while(1);
 }
+//test area----------------------------------------------------
+DMA_HandleTypeDef rx_dma_hd = {
+	.Instance = DMA1_Channel6,
+	.Init.Direction = DMA_MEMORY_TO_MEMORY,
+	.Init.PeriphInc = DMA_PINC_DISABLE,
+	.Init.MemInc = DMA_MINC_ENABLE,
+	.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD,
+	.Init.MemDataAlignment = DMA_PDATAALIGN_HALFWORD,
+	.Init.Mode = DMA_NORMAL,
+	.Init.Priority = DMA_PRIORITY_HIGH
+};
+void NSCP_Recv_Init_Test()
+{
+	//datas
+	int size = 16;
+	char title[16] = {0};
+	uint16_t tmp;
+	uint16_t std_res = 0x05;
+	
+	//init OLED
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//dma init
+	__HAL_RCC_DMA1_CLK_ENABLE();
+	HAL_DMA_Init(&rx_dma_hd);
+	
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef io_config = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Speed = GPIO_SPEED_FREQ_HIGH,
+		.Pull = GPIO_NOPULL
+	};
+	HAL_GPIO_Init(GPIOA, &io_config);
+	
+	//test code
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+	HAL_DMA_Start(&rx_dma_hd, (uint32_t)(&GPIOA->ODR), (uint32_t)(&tmp), 1);
+	for (int i = 0; i < size; i++) {
+		if (((1 << i) & tmp) == 0) title[i] = '0';
+		else title[i] = '1';
+	}
+	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);
+	//stuck
+	while(1);
+}
+//test area end----------------------------------------------------
 
 void DMA1_Channel7_IRQHandler()
 {

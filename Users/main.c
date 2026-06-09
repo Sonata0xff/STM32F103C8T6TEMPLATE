@@ -12,6 +12,6 @@ int main()
 	Standard_process();
 
 	//work code
-	NSCP_Send_Full_Send_Test3();
+	NSCP_Recv_Init_Test();
 	return 0;
 }

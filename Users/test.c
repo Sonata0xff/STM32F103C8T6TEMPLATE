@@ -731,7 +731,6 @@ void NSCP_Recv_Init_Test()
 	
 	/*
 	timer-test
-	*/
 	__HAL_RCC_TIM3_CLK_ENABLE();
 	//gpio init
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -755,8 +754,12 @@ void NSCP_Recv_Init_Test()
 	rx_timer_hd.Instance->CNT = 300 - 1;//300 - 1;
 	__HAL_TIM_CLEAR_IT(&rx_timer_hd, TIM_IT_UPDATE);
 	HAL_TIM_Base_Start_IT(&rx_timer_hd);
-	//for (int i = 0; i < 500; i++) {}
-	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	*/
+	
+	/*
+	external-triggier-test
+	*/
+	
 	//stuck
 	while(1);
 }

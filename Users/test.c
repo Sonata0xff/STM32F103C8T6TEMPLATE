@@ -531,6 +531,7 @@ void TIM4_IRQHandler()
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+	if (htim->Instance == TIM3) return;
 	HAL_TIM_Base_Stop_IT(htim);
 }
 //gap timer config end
@@ -670,10 +671,29 @@ DMA_HandleTypeDef rx_dma_hd = {
 	.Init.Mode = DMA_NORMAL,
 	.Init.Priority = DMA_PRIORITY_HIGH
 };
+TIM_HandleTypeDef rx_timer_hd = {
+	.Instance = TIM3,
+	.Init.Prescaler = 36 - 1,
+	.Init.CounterMode = TIM_COUNTERMODE_UP,
+	.Init.Period = 500 - 1,
+	.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1,
+	.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE
+};
+int countSize = 0;
+void TIM3_IRQHandler()
+{
+	HAL_TIM_IRQHandler(&rx_timer_hd);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	if (countSize < 4) {
+		countSize++;
+	} else {
+		HAL_TIM_Base_Stop_IT(&rx_timer_hd);
+	}
+}
 void NSCP_Recv_Init_Test()
 {
 	//datas
-	int size = 16;
+	/*int size = 16;
 	char title[16] = {0};
 	uint16_t tmp;
 	uint16_t std_res = 0x05;
@@ -683,8 +703,9 @@ void NSCP_Recv_Init_Test()
 	SetIIC_Comm_Mode(1);//Polling mode
 	OLED_Init();
 	OLED_TurnOn_Screen();
-	OLED_Flash_Screen(0x00);
-	
+	OLED_Flash_Screen(0x00);*/
+	/*
+	gpio-dma test
 	//dma init
 	__HAL_RCC_DMA1_CLK_ENABLE();
 	HAL_DMA_Init(&rx_dma_hd);
@@ -706,7 +727,36 @@ void NSCP_Recv_Init_Test()
 		if (((1 << i) & tmp) == 0) title[i] = '0';
 		else title[i] = '1';
 	}
-	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);
+	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);*/
+	
+	/*
+	timer-test
+	*/
+	__HAL_RCC_TIM3_CLK_ENABLE();
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef io_config = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Speed = GPIO_SPEED_FREQ_HIGH,
+		.Pull = GPIO_NOPULL
+	};
+	HAL_GPIO_Init(GPIOA, &io_config);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//NVIC Init
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+	HAL_NVIC_SetPriority(TIM3_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ(TIM3_IRQn);
+	//timer init
+	HAL_TIM_Base_Init(&rx_timer_hd);
+	//test code
+	countSize = 0;
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	rx_timer_hd.Instance->CNT = 300 - 1;//300 - 1;
+	__HAL_TIM_CLEAR_IT(&rx_timer_hd, TIM_IT_UPDATE);
+	HAL_TIM_Base_Start_IT(&rx_timer_hd);
+	//for (int i = 0; i < 500; i++) {}
+	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 	//stuck
 	while(1);
 }

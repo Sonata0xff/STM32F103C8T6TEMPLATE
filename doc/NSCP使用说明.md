@@ -55,10 +55,10 @@ NSCP_ON -> NSCP_READY -> NSCP_LOADED
 NSCP_ON -> NSCP_READY -> NSCP_LISTEN_ON
                 ^              |
                 |              √
-                |         NSCP_LISTEN_OFF
-                |              |
-                |              √
-                ------------ NSCP_TRANS_FIN
+                |---------NSCP_LISTEN_OFF
+                              |
+                              √
+                         NSCP_TRANS_FIN
 
 三、内部测试用例说明：
 (1)GPIP_DMA_FUNC_TEST：

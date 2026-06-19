@@ -99,8 +99,24 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf);
 /*
 NSCP recv API
 */
+//recv first init
+//NSCP_ON -> NSCP_READY
+void NSCP_Recv_Init(NSCP_ConfigTypeDef* comm_conf);
 
+//recv start receive
+//NSCP_READY -> NSCP_LISTEN_ON
+void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf);
 
+//recv receive post handle
+//NSCP_LISTEN_ON -> NSCP_LISTEN_OFF
+void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf);
 
+//recv Status change
+//NSCP_LISTEN_OFF -> NSCP_READY -> NSCP_LISTEN_ON
+//NSCP_LISTEN_OFF -> NSCP_TRANS_FIN
+void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf);
+
+//recv get comm result.
+uint16_t NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf);
 #endif
 #endif

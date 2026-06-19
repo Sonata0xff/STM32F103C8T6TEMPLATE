@@ -1,6 +1,8 @@
 #include "NSCP.h"
 #ifdef NSCP_API_EN
-
+/*
+NSCP Sender API
+*/
 void NSCP_Sender_Init(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
@@ -152,5 +154,66 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->tmp_status = NSCP_READY;
 	DC_Delay(comm_conf->gap_timer);
 	return;
+}
+
+/*
+NSCP recv API
+*/
+//recv first init
+//NSCP_ON -> NSCP_READY
+void NSCP_Recv_Init(NSCP_ConfigTypeDef* comm_conf)
+{
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_ON) return;
+	//coding ...
+	comm_conf->tmp_status = NSCP_READY;
+	return;
+}
+
+//recv start receive
+//NSCP_READY -> NSCP_LISTEN_ON
+void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf)
+{
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_READY) return;
+	//coding ...
+	comm_conf->tmp_status = NSCP_LISTEN_ON;
+	return;
+}
+
+//recv receive post handle
+//NSCP_LISTEN_ON -> NSCP_LISTEN_OFF
+void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
+{
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_LISTEN_ON) return;
+	//coding ...
+	comm_conf->tmp_status = NSCP_LISTEN_OFF;
+	return;
+}
+
+//recv Status change
+//NSCP_LISTEN_OFF -> NSCP_READY -> NSCP_LISTEN_ON
+//NSCP_LISTEN_OFF -> NSCP_TRANS_FIN
+void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf)
+{
+	if (comm_conf == NSCP_NULL ||
+			comm_conf->tmp_status != NSCP_LISTEN_OFF) return;
+	if (1) {
+		//coding 1 ...
+		comm_conf->tmp_status = NSCP_READY;
+		NSCP_Recv_Start(comm_conf);
+	} else {
+		//coding 2 ...
+		comm_conf->tmp_status = NSCP_TRANS_FIN;
+	}
+	return;
+}
+
+//recv get comm result.
+uint16_t NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf)
+{
+	//coding ...
+	return 0x0000;
 }
 #endif

@@ -679,6 +679,13 @@ TIM_HandleTypeDef rx_timer_hd = {
 	.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1,
 	.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE
 };
+//TIM3_CH2 -- PA7
+TIM_SlaveConfigTypeDef slave_conf_hd = {
+	.SlaveMode = TIM_SLAVEMODE_TRIGGER,
+	.InputTrigger = TIM_TS_TI2FP2,
+	.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING,
+	.TriggerFilter = 0x0
+};
 int countSize = 0;
 void TIM3_IRQHandler()
 {
@@ -690,22 +697,18 @@ void TIM3_IRQHandler()
 		HAL_TIM_Base_Stop_IT(&rx_timer_hd);
 	}
 }
-void NSCP_Recv_Init_Test()
+
+void GPIP_DMA_FUNC_TEST()
 {
-	//datas
-	/*int size = 16;
-	char title[16] = {0};
+	int size = 16;
 	uint16_t tmp;
-	uint16_t std_res = 0x05;
-	
+	char title[16] = {0};
 	//init OLED
 	IIC1_Init(0, 0);
 	SetIIC_Comm_Mode(1);//Polling mode
 	OLED_Init();
 	OLED_TurnOn_Screen();
-	OLED_Flash_Screen(0x00);*/
-	/*
-	gpio-dma test
+	OLED_Flash_Screen(0x00);
 	//dma init
 	__HAL_RCC_DMA1_CLK_ENABLE();
 	HAL_DMA_Init(&rx_dma_hd);
@@ -727,10 +730,11 @@ void NSCP_Recv_Init_Test()
 		if (((1 << i) & tmp) == 0) title[i] = '0';
 		else title[i] = '1';
 	}
-	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);*/
-	
-	/*
-	timer-test
+	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);
+}
+
+void TIMER_FUNC_TEST()
+{
 	__HAL_RCC_TIM3_CLK_ENABLE();
 	//gpio init
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -754,12 +758,76 @@ void NSCP_Recv_Init_Test()
 	rx_timer_hd.Instance->CNT = 300 - 1;//300 - 1;
 	__HAL_TIM_CLEAR_IT(&rx_timer_hd, TIM_IT_UPDATE);
 	HAL_TIM_Base_Start_IT(&rx_timer_hd);
+}
+
+void TRIGGER_FUNC_TEST()
+{
+	__HAL_RCC_TIM3_CLK_ENABLE();
+	
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef io_config = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Speed = GPIO_SPEED_FREQ_HIGH,
+		.Pull = GPIO_NOPULL
+	};
+	HAL_GPIO_Init(GPIOA, &io_config);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	GPIO_InitTypeDef GPIO_EX_conf = {
+		.Pin = GPIO_PIN_7,
+		.Mode = GPIO_MODE_AF_INPUT,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &GPIO_EX_conf);
+	//NVIC Init
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+	HAL_NVIC_SetPriority(TIM3_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ(TIM3_IRQn);
+	
+	//timer init
+	HAL_TIM_Base_Init(&rx_timer_hd);
+	//timer slave mode init
+	HAL_TIM_SlaveConfigSynchro(&rx_timer_hd, &slave_conf_hd);
+	
+	//test code
+	countSize = 0;
+	rx_timer_hd.Instance->CNT = 300 - 1;//300 - 1;
+	__HAL_TIM_CLEAR_IT(&rx_timer_hd, TIM_IT_UPDATE);
+	HAL_TIM_Base_Start_IT(&rx_timer_hd);
+	while(1);
+}
+
+void NSCP_Recv_Init_Test()
+{
+	//datas
+	/*int size = 16;
+	char title[16] = {0};
+	uint16_t tmp;
+	uint16_t std_res = 0x05;
+	
+	//init OLED
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);*/
+	
+	/*
+	gpio-dma test
+	GPIP_DMA_FUNC_TEST();
+	*/
+	
+	/*
+	timer-test
+	TIMER_FUNC_TEST();
 	*/
 	
 	/*
 	external-triggier-test
+	TRIGGER_FUNC_TEST();
 	*/
-	
 	//stuck
 	while(1);
 }

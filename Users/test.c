@@ -698,7 +698,7 @@ void TIM3_IRQHandler()
 	}
 }
 
-void GPIP_DMA_FUNC_TEST()
+void GPIO_DMA_FUNC_TEST()
 {
 	int size = 16;
 	uint16_t tmp;
@@ -814,9 +814,9 @@ void NSCP_Recv_Init_Test()
 	OLED_TurnOn_Screen();
 	OLED_Flash_Screen(0x00);*/
 	
-	/*
-	gpio-dma test
-	GPIP_DMA_FUNC_TEST();
+	
+	/*gpio-dma test
+	GPIO_DMA_FUNC_TEST();
 	*/
 	
 	/*

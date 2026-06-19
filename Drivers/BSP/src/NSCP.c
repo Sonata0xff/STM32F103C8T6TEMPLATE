@@ -159,13 +159,56 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 /*
 NSCP recv API
 */
+
+//comm_conf Init
+// -> NSCP_ON
+void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
+{
+	if (comm_conf == NSCP_NULL) return;
+	//data init
+	comm_conf->data = 0x00;
+	//DMA_HandleTypeDef init
+	comm_conf->dma_handle->Instance = comm_conf->dma_conf;
+	comm_conf->dma_handle->Init.Direction = DMA_MEMORY_TO_MEMORY;
+	comm_conf->dma_handle->Init.PeriphInc = DMA_PINC_DISABLE;
+	comm_conf->dma_handle->Init.MemInc = DMA_MINC_ENABLE;
+	comm_conf->dma_handle->Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+	comm_conf->dma_handle->Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+	comm_conf->dma_handle->Init.Mode = DMA_NORMAL;
+	comm_conf->dma_handle->Init.Priority = DMA_PRIORITY_HIGH;
+	//TIM_HandleTypeDef init
+	comm_conf->pwm_handle->Instance = comm_conf->tim_conf;
+	comm_conf->pwm_handle->Init.CounterMode = TIM_COUNTERMODE_UP;
+	comm_conf->pwm_handle->Init.Period = comm_conf->period - 1;
+	comm_conf->pwm_handle->Init.Prescaler = 36 - 1;//36 div, supposed to be 2 Mhz, 0.5us
+	//GPIO_InitTypeDef init
+	comm_conf->sda_handle->Pin = comm_conf->sda_pin;
+	comm_conf->sda_handle->Mode = GPIO_MODE_AF_INPUT;
+	comm_conf->sda_handle->Pull = GPIO_NOPULL;
+	comm_conf->sda_handle->Speed = GPIO_SPEED_FREQ_HIGH;
+	//status init
+	comm_conf->tmp_status = NSCP_ON;
+}
+
 //recv first init
 //NSCP_ON -> NSCP_READY
 void NSCP_Recv_Init(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_ON) return;
-	//coding ...
+	//rcc enable
+	comm_conf->func_handle();
+	//sda gpio init
+	HAL_GPIO_Init(comm_conf->sda_gpio_handle, comm_conf->sda_handle);
+	//dma init
+	HAL_DMA_Init(comm_conf->dma_handle);
+	//NVIC Init
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+	HAL_NVIC_SetPriority(comm_conf->dma_ir_handle, 1, 1);
+	HAL_NVIC_EnableIRQ(comm_conf->dma_ir_handle);
+	//timer init & timer slave mode init
+	HAL_TIM_Base_Init(comm_conf->pwm_handle);
+	HAL_TIM_SlaveConfigSynchro(comm_conf->pwm_handle, comm_conf->pwm_slave_handle);
 	comm_conf->tmp_status = NSCP_READY;
 	return;
 }
@@ -176,7 +219,9 @@ void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_READY) return;
-	//coding ...
+	comm_conf->pwm_handle->Instance->CNT = (comm_conf->period -  comm_conf->sampling_period) - 1;
+	__HAL_TIM_CLEAR_IT(comm_conf->pwm_handle, TIM_IT_UPDATE);
+	//coding... start timer
 	comm_conf->tmp_status = NSCP_LISTEN_ON;
 	return;
 }
@@ -187,8 +232,13 @@ void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LISTEN_ON) return;
+	HAL_TIM_Base_Stop_DMA(comm_conf->pwm_handle);
 	//coding ...
+	//fake code
+	NSCP_Recv_Get(comm_conf);
+	//fake code end.
 	comm_conf->tmp_status = NSCP_LISTEN_OFF;
+	NSCP_Recv_Trans_Change(comm_conf);
 	return;
 }
 
@@ -199,21 +249,21 @@ void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LISTEN_OFF) return;
-	if (1) {
+	if (0) {
 		//coding 1 ...
 		comm_conf->tmp_status = NSCP_READY;
 		NSCP_Recv_Start(comm_conf);
 	} else {
-		//coding 2 ...
 		comm_conf->tmp_status = NSCP_TRANS_FIN;
 	}
 	return;
 }
 
 //recv get comm result.
-uint16_t NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf)
+void NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf)
 {
 	//coding ...
-	return 0x0000;
+	comm_conf->data = 0x0000;
+	return;
 }
 #endif

@@ -28,27 +28,29 @@ typedef struct {
 	uint16_t data;
 	
 	//usr conf
-	uint32_t 							Channel;
-	uint32_t							one_period;
-	uint32_t 							period;
-	uint32_t							sda_pin;
-	uint16_t 							tim_cc_id;
-	IRQn_Type 						dma_ir_handle;
-	DMA_Channel_TypeDef* 	dma_conf;
-	TIM_TypeDef*				 	tim_conf;
-	GPIO_TypeDef*					sda_gpio_handle;
-	rcc_clock_init_func 	func_handle;
-	DelayCounter_ConfigTypeDef* gap_timer;
+	uint32_t 							Channel; //sender
+	uint32_t							one_period; //sender
+	uint32_t 							period; //sender & recv
+	uint32_t              sampling_period; //recv
+	uint32_t							sda_pin; //sender & recv
+	uint16_t 							tim_cc_id; //sender
+	IRQn_Type 						dma_ir_handle; //sender & recv
+	DMA_Channel_TypeDef* 	dma_conf; //sender & recv
+	TIM_TypeDef*				 	tim_conf; //sender & recv
+	GPIO_TypeDef*					sda_gpio_handle; //sender & recv
+	rcc_clock_init_func 	func_handle; //sender & recv
+	DelayCounter_ConfigTypeDef* gap_timer; //sender
 	
 	//sys conf
-	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1];
-	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN + 1];
-	AtomVarType           send_lock;
-	NscpCommStatus 				tmp_status;
-	TIM_OC_InitTypeDef*		pwm_channel_handle;
-	DMA_HandleTypeDef*		dma_handle;
-	TIM_HandleTypeDef*		pwm_handle;
-	GPIO_InitTypeDef*			sda_handle;
+	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1]; //sender
+	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN + 1]; //recv
+	AtomVarType           send_lock; //sender
+	NscpCommStatus 				tmp_status; //sender & recv
+	TIM_OC_InitTypeDef*		pwm_channel_handle; //sender
+	DMA_HandleTypeDef*		dma_handle; //sender & recv
+	TIM_HandleTypeDef*		pwm_handle; //sender & recv
+	TIM_SlaveConfigTypeDef* pwm_slave_handle; //sender & recv
+	GPIO_InitTypeDef*			sda_handle; //sender & recv
 } NSCP_ConfigTypeDef;
 
 #define NSCP_NULL 0
@@ -99,6 +101,10 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf);
 /*
 NSCP recv API
 */
+//comm_conf Init
+// -> NSCP_ON
+void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf);
+
 //recv first init
 //NSCP_ON -> NSCP_READY
 void NSCP_Recv_Init(NSCP_ConfigTypeDef* comm_conf);
@@ -117,6 +123,6 @@ void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf);
 void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf);
 
 //recv get comm result.
-uint16_t NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf);
+void NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf);
 #endif
 #endif

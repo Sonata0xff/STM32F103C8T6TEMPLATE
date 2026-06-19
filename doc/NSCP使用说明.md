@@ -61,7 +61,7 @@ NSCP_ON -> NSCP_READY -> NSCP_LISTEN_ON
                          NSCP_TRANS_FIN
 
 三、内部测试用例说明：
-(1)GPIP_DMA_FUNC_TEST：
+(1)GPIO_DMA_FUNC_TEST：
         用于测试将GPIO寄存器数据通过dma搬运到内存中制定位置。这个功能将用于nscp接收器的采样数据搬运。
         具体实验内容是在修改PA6的电平后，将GPIOA的输出寄存器数据搬运到tmp中，并在OLED中输出tmp的二进制结果，用来查看PA6的结果。
 

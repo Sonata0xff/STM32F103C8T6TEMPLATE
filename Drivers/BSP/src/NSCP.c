@@ -1,5 +1,36 @@
 #include "NSCP.h"
 #ifdef NSCP_API_EN
+
+/*
+private function
+*/
+static void NSCP_TIM_DMAPeriodElapsedCplt(DMA_HandleTypeDef *hdma)
+{
+	TIM_HandleTypeDef *htim = (TIM_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)->Parent;
+
+  if (htim->hdma[TIM_DMA_ID_UPDATE]->Init.Mode == DMA_NORMAL)
+  {
+    htim->State = HAL_TIM_STATE_READY;
+  }
+
+#if (USE_HAL_TIM_REGISTER_CALLBACKS == 1)
+  htim->PeriodElapsedCallback(htim);
+#else
+  HAL_TIM_PeriodElapsedCallback(htim);
+#endif /* USE_HAL_TIM_REGISTER_CALLBACKS */
+}
+
+static void NSCP_TIM_DMAPeriodElapsedHalfCplt(DMA_HandleTypeDef *hdma)
+{
+	TIM_HandleTypeDef *htim = (TIM_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)->Parent;
+
+#if (USE_HAL_TIM_REGISTER_CALLBACKS == 1)
+  htim->PeriodElapsedHalfCpltCallback(htim);
+#else
+  HAL_TIM_PeriodElapsedHalfCpltCallback(htim);
+#endif /* USE_HAL_TIM_REGISTER_CALLBACKS */
+}
+
 /*
 NSCP Sender API
 */
@@ -116,14 +147,14 @@ void NSCP_Sender_Trans_Launch(NSCP_ConfigTypeDef* comm_conf)
 	return;
 }
 
-//NSCP check the trnas is fin.NSCP_TRANS_NO_FIN means not , NSCP_TRANS_FIN means fin.
+//NSCP check the trnas is fin.TRANS_NO_FIN means not , TRANS_FIN means fin.
 uint8_t NSCP_Sender_Wait_For_Trans_Fin(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_TRANS_ON) return NSCP_TRANS_FIN;
 	if (Atom_Read(&comm_conf->send_lock) == ATOM_VALUE_RESET) {
-		return NSCP_TRANS_FIN;
-	} else return NSCP_TRANS_NO_FIN;
+		return TRANS_FIN;
+	} else return TRANS_NO_FIN;
 }
 
 //NSCP wait until the trnas is fin. Block-on wait.
@@ -159,7 +190,7 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 /*
 NSCP recv API
 */
-
+//dma setting coding ...
 //comm_conf Init
 // -> NSCP_ON
 void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
@@ -169,7 +200,7 @@ void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->data = 0x00;
 	//DMA_HandleTypeDef init
 	comm_conf->dma_handle->Instance = comm_conf->dma_conf;
-	comm_conf->dma_handle->Init.Direction = DMA_MEMORY_TO_MEMORY;
+	comm_conf->dma_handle->Init.Direction = DMA_PERIPH_TO_MEMORY;
 	comm_conf->dma_handle->Init.PeriphInc = DMA_PINC_DISABLE;
 	comm_conf->dma_handle->Init.MemInc = DMA_MINC_ENABLE;
 	comm_conf->dma_handle->Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
@@ -181,6 +212,14 @@ void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->pwm_handle->Init.CounterMode = TIM_COUNTERMODE_UP;
 	comm_conf->pwm_handle->Init.Period = comm_conf->period - 1;
 	comm_conf->pwm_handle->Init.Prescaler = 36 - 1;//36 div, supposed to be 2 Mhz, 0.5us
+	comm_conf->pwm_handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	comm_conf->pwm_handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE] = comm_conf->dma_handle;
+	//tim slave init
+	comm_conf->pwm_slave_handle->SlaveMode = TIM_SLAVEMODE_TRIGGER;
+	comm_conf->pwm_slave_handle->InputTrigger = TIM_TS_TI2FP2;
+	comm_conf->pwm_slave_handle->TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+	comm_conf->pwm_slave_handle->TriggerFilter = 0x0;
 	//GPIO_InitTypeDef init
 	comm_conf->sda_handle->Pin = comm_conf->sda_pin;
 	comm_conf->sda_handle->Mode = GPIO_MODE_AF_INPUT;
@@ -202,6 +241,7 @@ void NSCP_Recv_Init(NSCP_ConfigTypeDef* comm_conf)
 	HAL_GPIO_Init(comm_conf->sda_gpio_handle, comm_conf->sda_handle);
 	//dma init
 	HAL_DMA_Init(comm_conf->dma_handle);
+	__HAL_LINKDMA(comm_conf->pwm_handle, hdma[TIM_DMA_ID_UPDATE], *(comm_conf->dma_handle));
 	//NVIC Init
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(comm_conf->dma_ir_handle, 1, 1);
@@ -221,7 +261,17 @@ void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf)
 			comm_conf->tmp_status != NSCP_READY) return;
 	comm_conf->pwm_handle->Instance->CNT = (comm_conf->period -  comm_conf->sampling_period) - 1;
 	__HAL_TIM_CLEAR_IT(comm_conf->pwm_handle, TIM_IT_UPDATE);
-	//coding... start timer
+	//start timer with self defined dma
+	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = NSCP_TIM_DMAPeriodElapsedCplt;
+	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = NSCP_TIM_DMAPeriodElapsedHalfCplt;
+	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
+	if (HAL_DMA_Start_IT(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE],
+											(uint32_t)(&comm_conf->sda_gpio_handle->IDR),
+											(uint32_t)comm_conf->duty_recv_buffer,
+                       NSCP_MAX_PACK_LEN) != HAL_OK) return;
+	__HAL_TIM_ENABLE_DMA(comm_conf->pwm_handle, TIM_DMA_UPDATE);
+	HAL_TIM_Base_Start(comm_conf->pwm_handle);
+	
 	comm_conf->tmp_status = NSCP_LISTEN_ON;
 	return;
 }
@@ -232,8 +282,10 @@ void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LISTEN_ON) return;
-	HAL_TIM_Base_Stop_DMA(comm_conf->pwm_handle);
-	//coding ...
+	//stop timer and self defined dma
+	__HAL_TIM_DISABLE_DMA(comm_conf->pwm_handle, TIM_DMA_UPDATE);
+	HAL_DMA_Abort_IT(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]);
+	HAL_TIM_Base_Stop(comm_conf->pwm_handle);
 	//fake code
 	NSCP_Recv_Get(comm_conf);
 	//fake code end.
@@ -262,8 +314,15 @@ void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf)
 //recv get comm result.
 void NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf)
 {
-	//coding ...
+	uint16_t model = 0x0001;
 	comm_conf->data = 0x0000;
+	for (unsigned char i = 0; i < 11; i++) {
+		if (comm_conf->duty_recv_buffer[i] & (uint16_t)comm_conf->sda_pin) {
+			comm_conf->data |= model;
+		}
+		model <<= 1;
+	}
 	return;
 }
+
 #endif

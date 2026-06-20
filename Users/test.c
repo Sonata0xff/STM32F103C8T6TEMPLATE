@@ -500,6 +500,7 @@ TIM_OC_InitTypeDef pwm_ch_conf;
 DMA_HandleTypeDef dma_han;
 TIM_HandleTypeDef pwm_conf;
 GPIO_InitTypeDef gpio_conf;
+TIM_SlaveConfigTypeDef slav_conf;
 typedef void (*post_handle_func)(NSCP_ConfigTypeDef*);
 post_handle_func post_func_ptr;
 
@@ -547,10 +548,13 @@ NSCP_ConfigTypeDef nscp_init = {
 		.Channel = TIM_CHANNEL_2,
 		.one_period = 4,
 		.period = 5,//2.5us
+		.sampling_period = 2, //1us
 		.sda_pin = GPIO_PIN_1,
 		.tim_cc_id = TIM_DMA_ID_CC2,
-		.dma_ir_handle = DMA1_Channel7_IRQn,
-		.dma_conf = DMA1_Channel7,
+		//.dma_ir_handle = DMA1_Channel7_IRQn,
+		.dma_ir_handle = DMA1_Channel2_IRQn,
+		//.dma_conf = DMA1_Channel7,
+		.dma_conf = DMA1_Channel2,
 		.tim_conf = TIM2,
 		.sda_gpio_handle = GPIOA,
 		.func_handle = rcc_init,
@@ -559,6 +563,7 @@ NSCP_ConfigTypeDef nscp_init = {
 		.pwm_channel_handle = &pwm_ch_conf,
 		.dma_handle = &dma_han,
 		.pwm_handle = &pwm_conf,
+		.pwm_slave_handle = &slav_conf,
 		.sda_handle = &gpio_conf
 };
 
@@ -593,7 +598,7 @@ void NSCP_Send_Full_Send_Test()
 	NSCP_Sender_Load_Data(&nscp_init);
 	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
 	NSCP_Sender_Trans_Launch(&nscp_init);
-	while (NSCP_Sender_Wait_For_Trans_Fin(&nscp_init) == NSCP_TRANS_NO_FIN) {
+	while (NSCP_Sender_Wait_For_Trans_Fin(&nscp_init) == TRANS_NO_FIN) {
 		//HAL_Delay(1);
 	}
 	while(1);
@@ -802,7 +807,7 @@ void TRIGGER_FUNC_TEST()
 void NSCP_Recv_Init_Test()
 {
 	//datas
-	/*int size = 16;
+	int size = 16;
 	char title[16] = {0};
 	uint16_t tmp;
 	uint16_t std_res = 0x05;
@@ -812,7 +817,7 @@ void NSCP_Recv_Init_Test()
 	SetIIC_Comm_Mode(1);//Polling mode
 	OLED_Init();
 	OLED_TurnOn_Screen();
-	OLED_Flash_Screen(0x00);*/
+	OLED_Flash_Screen(0x00);
 	
 	
 	/*gpio-dma test
@@ -828,6 +833,15 @@ void NSCP_Recv_Init_Test()
 	external-triggier-test
 	TRIGGER_FUNC_TEST();
 	*/
+	NSCP_Recv_Config_Init(&nscp_init);
+	NSCP_Recv_Init(&nscp_init);
+	NSCP_Recv_Start(&nscp_init);
+	while (nscp_init.tmp_status != NSCP_TRANS_FIN);
+	for (unsigned char i = 0; i < 11; i++) {
+		if ((1 << i) & nscp_init.data) title[i] = '1';
+		else title[i] = '0';
+	}
+	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);
 	//stuck
 	while(1);
 }
@@ -836,6 +850,12 @@ void NSCP_Recv_Init_Test()
 void DMA1_Channel7_IRQHandler()
 {
 	HAL_DMA_IRQHandler(&dma_han);
+}
+
+void DMA1_Channel2_IRQHandler()
+{
+	HAL_DMA_IRQHandler(&dma_han);
+	NSCP_Recv_Trans_Post_Handle(&nscp_init);
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)

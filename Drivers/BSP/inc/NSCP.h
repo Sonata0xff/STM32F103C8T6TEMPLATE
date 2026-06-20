@@ -14,13 +14,13 @@ typedef void (*rcc_clock_init_func)(void);
 
 typedef enum {
 	NSCP_ON = 0,
-	NSCP_READY,
-	NSCP_LOADED,
-	NSCP_TRANS_READY,
-	NSCP_TRANS_ON,
-	NSCP_TRANS_FIN,
-	NSCP_LISTEN_ON,
-	NSCP_LISTEN_OFF
+	NSCP_READY = 1,
+	NSCP_LOADED = 2,
+	NSCP_TRANS_READY = 3,
+	NSCP_TRANS_ON = 4,
+	NSCP_TRANS_FIN = 5,
+	NSCP_LISTEN_ON = 6,
+	NSCP_LISTEN_OFF = 7
 } NscpCommStatus;
 
 typedef struct {
@@ -43,7 +43,7 @@ typedef struct {
 	
 	//sys conf
 	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1]; //sender
-	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN + 1]; //recv
+	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN]; //recv
 	AtomVarType           send_lock; //sender
 	NscpCommStatus 				tmp_status; //sender & recv
 	TIM_OC_InitTypeDef*		pwm_channel_handle; //sender
@@ -56,8 +56,8 @@ typedef struct {
 #define NSCP_NULL 0
 #define NSCP_TRANS_CLEAR 1
 #define NSCP_TRANS_NO_CLEAR 0
-#define NSCP_TRANS_FIN 1
-#define NSCP_TRANS_NO_FIN 0
+#define TRANS_FIN 1
+#define TRANS_NO_FIN 0
 #define NSCP_BIT_ONE 1
 #define NSCP_DELAY_GAP 8 //8us
 

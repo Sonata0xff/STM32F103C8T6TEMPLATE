@@ -271,7 +271,6 @@ void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf)
                        NSCP_MAX_PACK_LEN) != HAL_OK) return;
 	__HAL_TIM_ENABLE_DMA(comm_conf->pwm_handle, TIM_DMA_UPDATE);
 	HAL_TIM_Base_Start(comm_conf->pwm_handle);
-	
 	comm_conf->tmp_status = NSCP_LISTEN_ON;
 	return;
 }

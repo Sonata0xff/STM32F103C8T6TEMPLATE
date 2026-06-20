@@ -833,6 +833,10 @@ void NSCP_Recv_Init_Test()
 	external-triggier-test
 	TRIGGER_FUNC_TEST();
 	*/
+	/*
+	1.There is still a bug, comes from hardware
+	2.We need to check the sender again, because there is a hidden bug found just right now. 
+	*/
 	NSCP_Recv_Config_Init(&nscp_init);
 	NSCP_Recv_Init(&nscp_init);
 	NSCP_Recv_Start(&nscp_init);

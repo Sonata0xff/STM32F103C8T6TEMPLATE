@@ -19,18 +19,6 @@ static void NSCP_TIM_DMAPeriodElapsedCplt(DMA_HandleTypeDef *hdma)
   HAL_TIM_PeriodElapsedCallback(htim);
 #endif /* USE_HAL_TIM_REGISTER_CALLBACKS */
 }
-
-static void NSCP_TIM_DMAPeriodElapsedHalfCplt(DMA_HandleTypeDef *hdma)
-{
-	TIM_HandleTypeDef *htim = (TIM_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)->Parent;
-
-#if (USE_HAL_TIM_REGISTER_CALLBACKS == 1)
-  htim->PeriodElapsedHalfCpltCallback(htim);
-#else
-  HAL_TIM_PeriodElapsedHalfCpltCallback(htim);
-#endif /* USE_HAL_TIM_REGISTER_CALLBACKS */
-}
-
 /*
 NSCP Sender API
 */
@@ -263,7 +251,6 @@ void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf)
 	__HAL_TIM_CLEAR_IT(comm_conf->pwm_handle, TIM_IT_UPDATE);
 	//start timer with self defined dma
 	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = NSCP_TIM_DMAPeriodElapsedCplt;
-	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = NSCP_TIM_DMAPeriodElapsedHalfCplt;
 	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
 	if (HAL_DMA_Start_IT(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE],
 											(uint32_t)(&comm_conf->sda_gpio_handle->IDR),
@@ -281,10 +268,10 @@ void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LISTEN_ON) return;
+	HAL_TIM_Base_Stop(comm_conf->pwm_handle);
 	//stop timer and self defined dma
 	__HAL_TIM_DISABLE_DMA(comm_conf->pwm_handle, TIM_DMA_UPDATE);
-	HAL_DMA_Abort_IT(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]);
-	HAL_TIM_Base_Stop(comm_conf->pwm_handle);
+	HAL_DMA_Abort(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]);
 	//fake code
 	NSCP_Recv_Get(comm_conf);
 	//fake code end.
@@ -315,7 +302,7 @@ void NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf)
 {
 	uint16_t model = 0x0001;
 	comm_conf->data = 0x0000;
-	for (unsigned char i = 0; i < 11; i++) {
+	for (unsigned char i = 0; i < NSCP_MAX_PACK_LEN; i++) {
 		if (comm_conf->duty_recv_buffer[i] & (uint16_t)comm_conf->sda_pin) {
 			comm_conf->data |= model;
 		}

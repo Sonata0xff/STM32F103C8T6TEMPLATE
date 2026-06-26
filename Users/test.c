@@ -594,6 +594,7 @@ void NSCP_Send_Full_Send_Test()
 	post_func_ptr = NSCP_Sender_Trans_Post_Handle;
 	NSCP_Sender_Config_Init(&nscp_init);
 	NSCP_Sender_Init(&nscp_init);
+	HAL_Delay(30000);
 	nscp_init.data = 0x555;
 	NSCP_Sender_Load_Data(&nscp_init);
 	NSCP_Sender_Wait_For_Trans_Ready_Sync(&nscp_init);
@@ -806,6 +807,7 @@ void TRIGGER_FUNC_TEST()
 
 void NSCP_Recv_Init_Test()
 {
+	HAL_Delay(1000);
 	//datas
 	int size = 16;
 	char title[16] = {0};
@@ -833,19 +835,15 @@ void NSCP_Recv_Init_Test()
 	external-triggier-test
 	TRIGGER_FUNC_TEST();
 	*/
-	/*
-	1.There is still a bug, comes from hardware
-	2.We need to check the sender again, because there is a hidden bug found just right now. 
-	*/
 	NSCP_Recv_Config_Init(&nscp_init);
 	NSCP_Recv_Init(&nscp_init);
 	NSCP_Recv_Start(&nscp_init);
 	while (nscp_init.tmp_status != NSCP_TRANS_FIN);
 	for (unsigned char i = 0; i < 11; i++) {
-		if ((1 << i) & nscp_init.data) title[i] = '1';
+		if (((1 << i) & nscp_init.data) != 0) title[i] = '1';
 		else title[i] = '0';
 	}
-	OLED_WriteIn_16x8String(0, 0, 16, (unsigned char*)title);
+	OLED_WriteIn_16x8String(0, 0, 11, (unsigned char*)title);
 	//stuck
 	while(1);
 }

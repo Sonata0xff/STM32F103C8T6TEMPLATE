@@ -178,7 +178,6 @@ void NSCP_Sender_Reset_Trans(NSCP_ConfigTypeDef* comm_conf)
 /*
 NSCP recv API
 */
-//dma setting coding ...
 //comm_conf Init
 // -> NSCP_ON
 void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
@@ -203,6 +202,8 @@ void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->pwm_handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	comm_conf->pwm_handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE] = comm_conf->dma_handle;
+	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = NSCP_TIM_DMAPeriodElapsedCplt;
+	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
 	//tim slave init
 	comm_conf->pwm_slave_handle->SlaveMode = TIM_SLAVEMODE_TRIGGER;
 	comm_conf->pwm_slave_handle->InputTrigger = TIM_TS_TI2FP2;
@@ -213,6 +214,8 @@ void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->sda_handle->Mode = GPIO_MODE_AF_INPUT;
 	comm_conf->sda_handle->Pull = GPIO_NOPULL;
 	comm_conf->sda_handle->Speed = GPIO_SPEED_FREQ_HIGH;
+	//lock init
+	Atom_Write(&comm_conf->send_lock, ATOM_VALUE_SET);
 	//status init
 	comm_conf->tmp_status = NSCP_ON;
 }
@@ -250,8 +253,6 @@ void NSCP_Recv_Start(NSCP_ConfigTypeDef* comm_conf)
 	comm_conf->pwm_handle->Instance->CNT = (comm_conf->period -  comm_conf->sampling_period) - 1;
 	__HAL_TIM_CLEAR_IT(comm_conf->pwm_handle, TIM_IT_UPDATE);
 	//start timer with self defined dma
-	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = NSCP_TIM_DMAPeriodElapsedCplt;
-	comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
 	if (HAL_DMA_Start_IT(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE],
 											(uint32_t)(&comm_conf->sda_gpio_handle->IDR),
 											(uint32_t)comm_conf->duty_recv_buffer,
@@ -272,9 +273,8 @@ void NSCP_Recv_Trans_Post_Handle(NSCP_ConfigTypeDef* comm_conf)
 	//stop timer and self defined dma
 	__HAL_TIM_DISABLE_DMA(comm_conf->pwm_handle, TIM_DMA_UPDATE);
 	HAL_DMA_Abort(comm_conf->pwm_handle->hdma[TIM_DMA_ID_UPDATE]);
-	//fake code
+	//calcuate the datas.
 	NSCP_Recv_Get(comm_conf);
-	//fake code end.
 	comm_conf->tmp_status = NSCP_LISTEN_OFF;
 	NSCP_Recv_Trans_Change(comm_conf);
 	return;
@@ -287,8 +287,7 @@ void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL ||
 			comm_conf->tmp_status != NSCP_LISTEN_OFF) return;
-	if (0) {
-		//coding 1 ...
+	if (Atom_Read(&comm_conf->send_lock) == ATOM_VALUE_SET) {
 		comm_conf->tmp_status = NSCP_READY;
 		NSCP_Recv_Start(comm_conf);
 	} else {
@@ -301,14 +300,33 @@ void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf)
 void NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf)
 {
 	uint16_t model = 0x0001;
-	comm_conf->data = 0x0000;
+	comm_conf->data_cache = 0x0000;
+	uint32_t primask = 0x0;
 	for (unsigned char i = 0; i < NSCP_MAX_PACK_LEN; i++) {
 		if (comm_conf->duty_recv_buffer[i] & (uint16_t)comm_conf->sda_pin) {
-			comm_conf->data |= model;
+			comm_conf->data_cache |= model;
 		}
 		model <<= 1;
 	}
+	primask = Atom_Block_Start();
+	comm_conf->data = comm_conf->data_cache;
+	Atom_Block_Stop(primask);
 	return;
+}
+
+uint16_t NSCP_Recv_Get_Data(NSCP_ConfigTypeDef* comm_conf)
+{
+	uint32_t primask = 0x0;
+	uint16_t data = 0x0;
+	primask = Atom_Block_Start();
+	data = comm_conf->data;
+	Atom_Block_Stop(primask);
+	return data;
+}
+
+void NSCP_Recv_Abort(NSCP_ConfigTypeDef* comm_conf)
+{
+	Atom_Write(&comm_conf->send_lock, ATOM_VALUE_RESET);
 }
 
 #endif

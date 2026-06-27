@@ -42,6 +42,7 @@ typedef struct {
 	DelayCounter_ConfigTypeDef* gap_timer; //sender
 	
 	//sys conf
+	uint16_t							data_cache;//recv
 	uint16_t              duty_send_buffer[NSCP_MAX_PACK_LEN + 1]; //sender
 	uint16_t              duty_recv_buffer[NSCP_MAX_PACK_LEN]; //recv
 	AtomVarType           send_lock; //sender
@@ -124,5 +125,18 @@ void NSCP_Recv_Trans_Change(NSCP_ConfigTypeDef* comm_conf);
 
 //recv get comm result.
 void NSCP_Recv_Get(NSCP_ConfigTypeDef* comm_conf);
+
+//user get the data, double cache async reading.
+uint16_t NSCP_Recv_Get_Data(NSCP_ConfigTypeDef* comm_conf);
+
+//user stop nscp recv trans loop async. This is a direct shut down.
+void NSCP_Recv_Abort(NSCP_ConfigTypeDef* comm_conf);
+
+/*
+left job
+1.rerecive test writing.
+2.merge test writing.
+*/
+
 #endif
 #endif

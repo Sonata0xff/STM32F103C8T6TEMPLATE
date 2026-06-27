@@ -52,7 +52,7 @@ NSCP_ON -> NSCP_READY -> NSCP_LOADED
         NSCP_TRANS_FIN  <- NSCP_TRANS_ON
 
 (3)NSCP状态机：接收者
-NSCP_ON -> NSCP_READY -> NSCP_LISTEN_ON
+NSCP_ON -> NSCP_READY ->(auto) NSCP_LISTEN_ON
                 ^              |
                 |              √
                 |---------NSCP_LISTEN_OFF

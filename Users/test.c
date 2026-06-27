@@ -532,7 +532,7 @@ void TIM4_IRQHandler()
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim->Instance == TIM3) return;
+	if (htim->Instance != TIM4) return;
 	HAL_TIM_Base_Stop_IT(htim);
 }
 //gap timer config end
@@ -849,6 +849,113 @@ void NSCP_Recv_Init_Test()
 }
 //test area end----------------------------------------------------
 
+//---------------------merge test----------------------------------
+
+NSCP_ConfigTypeDef merge_send_handle = {
+		.Channel = TIM_CHANNEL_2,
+		.one_period = 4,
+		.period = 5,//2.5us
+		.sampling_period = 2, //1us
+		.sda_pin = GPIO_PIN_1,
+		.tim_cc_id = TIM_DMA_ID_CC2,
+		.dma_ir_handle = DMA1_Channel7_IRQn,
+		.dma_conf = DMA1_Channel7,
+		.tim_conf = TIM2,
+		.sda_gpio_handle = GPIOA,
+		.func_handle = rcc_init,
+		.gap_timer = &gap_timer,
+		
+		.pwm_channel_handle = &pwm_ch_conf,
+		.dma_handle = &dma_han,
+		.pwm_handle = &pwm_conf,
+		.pwm_slave_handle = &slav_conf,
+		.sda_handle = &gpio_conf
+};
+
+void Merge_Test_Send()
+{
+	
+	//init OLED
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	char title1[] = "Sending...";
+	char title2[] = "Fin";
+	post_func_ptr = NSCP_Sender_Trans_Post_Handle;
+	NSCP_Sender_Config_Init(&merge_send_handle);
+	NSCP_Sender_Init(&merge_send_handle);
+	HAL_Delay(10000);
+	merge_send_handle.data = 0x555;
+	OLED_WriteIn_16x8String(0, 0, 10, (unsigned char*)title1);
+	for (unsigned char i = 0; i < 4; i++) {
+		NSCP_Sender_Load_Data(&merge_send_handle);
+		NSCP_Sender_Wait_For_Trans_Ready_Sync(&merge_send_handle);
+		NSCP_Sender_Trans_Launch(&merge_send_handle);
+		NSCP_Sender_Wait_For_Trans_Fin_Sync(&merge_send_handle);
+		merge_send_handle.data += 1;
+	}
+	OLED_WriteIn_16x8String(10, 0, 3, (unsigned char*)title2);
+	while(1);
+}
+
+NSCP_ConfigTypeDef merge_recv_handle = {
+		.Channel = TIM_CHANNEL_2,
+		.one_period = 4,
+		.period = 5,//2.5us
+		.sampling_period = 2, //1us
+		.sda_pin = GPIO_PIN_1,
+		.tim_cc_id = TIM_DMA_ID_CC2,
+		.dma_ir_handle = DMA1_Channel2_IRQn,
+		.dma_conf = DMA1_Channel2,
+		.tim_conf = TIM2,
+		.sda_gpio_handle = GPIOA,
+		.func_handle = rcc_init,
+		.gap_timer = &gap_timer,
+		
+		.pwm_channel_handle = &pwm_ch_conf,
+		.dma_handle = &dma_han,
+		.pwm_handle = &pwm_conf,
+		.pwm_slave_handle = &slav_conf,
+		.sda_handle = &gpio_conf
+};
+
+void Merge_Test_Recv()
+{
+	HAL_Delay(1000);
+	//datas
+	char title[6] = {0};
+	uint16_t tmp = 0x0000;
+	uint16_t cache = 0x0000;
+	unsigned char piv = 0;
+	
+	//init OLED
+	IIC1_Init(0, 0);
+	SetIIC_Comm_Mode(1);//Polling mode
+	OLED_Init();
+	OLED_TurnOn_Screen();
+	OLED_Flash_Screen(0x00);
+	
+	//nscp init
+	NSCP_Recv_Config_Init(&merge_recv_handle);
+	NSCP_Recv_Init(&merge_recv_handle);
+	NSCP_Recv_Start(&merge_recv_handle);
+	while(1) {
+		for (int i = 0; i < 1000; i++);
+		cache = NSCP_Recv_Get_Data(&merge_recv_handle);
+		if (cache != tmp) {
+			tmp = cache;
+			piv++;
+			piv %= 4;
+		}
+		TransI16_2_Str(tmp, title);
+		OLED_WriteIn_16x8String(0, piv, 6, (unsigned char*)title);
+	}
+}
+
+//---------------------merge test end------------------------------
+
 void DMA1_Channel7_IRQHandler()
 {
 	HAL_DMA_IRQHandler(&dma_han);
@@ -857,7 +964,7 @@ void DMA1_Channel7_IRQHandler()
 void DMA1_Channel2_IRQHandler()
 {
 	HAL_DMA_IRQHandler(&dma_han);
-	NSCP_Recv_Trans_Post_Handle(&nscp_init);
+	NSCP_Recv_Trans_Post_Handle(&merge_recv_handle);
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
@@ -865,7 +972,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   if(htim->Instance == TIM2)
   {
     HAL_TIM_PWM_Stop_DMA(&pwm_conf, TIM_CHANNEL_2);
-		post_func_ptr(&nscp_init);
+		post_func_ptr(&merge_send_handle);
   }
 }
 

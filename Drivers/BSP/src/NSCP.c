@@ -184,7 +184,7 @@ void NSCP_Recv_Config_Init(NSCP_ConfigTypeDef* comm_conf)
 {
 	if (comm_conf == NSCP_NULL) return;
 	//data init
-	comm_conf->data = 0x00;
+	comm_conf->data = 0x0000;
 	//DMA_HandleTypeDef init
 	comm_conf->dma_handle->Instance = comm_conf->dma_conf;
 	comm_conf->dma_handle->Init.Direction = DMA_PERIPH_TO_MEMORY;

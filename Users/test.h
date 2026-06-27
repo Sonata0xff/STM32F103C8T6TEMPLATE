@@ -83,6 +83,7 @@ test case : NSCP
 #include "stm32f1xx.h"                  // Device header
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_conf.h"
+#include "utils.h"
 #include "NSCP.h"
 #include "OLED.h"
 void NSCP_Send_Init_Test();
@@ -92,6 +93,13 @@ void NSCP_Send_Full_Send_Test2();
 void NSCP_Send_Full_Send_Test3();
 
 void NSCP_Recv_Init_Test(); //receiver test
+
+//---------------------merge test----------------------------------
+void Merge_Test_Send();
+void Merge_Test_Recv();
+//---------------------merge test end------------------------------
+
+
 #endif
 //----------------------------------------------------
 /*

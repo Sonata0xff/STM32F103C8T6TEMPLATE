@@ -60,7 +60,7 @@ typedef struct {
 #define TRANS_FIN 1
 #define TRANS_NO_FIN 0
 #define NSCP_BIT_ONE 1
-#define NSCP_DELAY_GAP 8 //8us
+#define NSCP_DELAY_GAP 10000 //10ms
 
 /*
 NSCP Sender API
@@ -133,9 +133,12 @@ uint16_t NSCP_Recv_Get_Data(NSCP_ConfigTypeDef* comm_conf);
 void NSCP_Recv_Abort(NSCP_ConfigTypeDef* comm_conf);
 
 /*
-left job
-1.rerecive test writing.
-2.merge test writing.
+The remaining job:
+1.The gap between every 11bits send pack still need to be optimized.
+2.Under merge testing, the gap needs 10ms to be sure that every packs can be accepted.
+3.We need to determine if is the test case reason or the logic itself has delay.
+4.find the best fitted gap(normally 8us) and shorten the post handle time if possible.
+5.The nscp protocol doc needs to be improved after the dev complete. 
 */
 
 #endif

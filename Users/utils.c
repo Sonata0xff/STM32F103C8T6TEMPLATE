@@ -66,4 +66,20 @@ void TransFloat_2_Str(float val, char * res)
 		threeSize /= 10;
 	}
 }
+
+void TransI16_2_Str(uint16_t from_, char* res)
+{
+	uint16_t model = 0xf000;
+	uint16_t tmp;
+	res[0] = '0';
+	res[1] = 'x';
+	char result;
+	for (unsigned char i = 0; i < 4; i++) {
+		tmp = ((from_ & model) >> ((3 - i) * 4));
+		if (tmp > 9) result = tmp - 10 + 'a';
+		else result = tmp + '0';
+		res[i + 2] = result;
+		model >>= 4;
+	}
+}
 #endif

@@ -12,6 +12,6 @@ int main()
 	Standard_process();
 
 	//work code
-	NSCP_Recv_Init_Test();
+	Merge_Test_Recv();
 	return 0;
 }

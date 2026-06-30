@@ -851,6 +851,8 @@ void NSCP_Recv_Init_Test()
 
 //---------------------merge test----------------------------------
 
+#define PACKS_NUM 2000
+
 NSCP_ConfigTypeDef merge_send_handle = {
 		.Channel = TIM_CHANNEL_2,
 		.one_period = 4,
@@ -887,9 +889,9 @@ void Merge_Test_Send()
 	NSCP_Sender_Config_Init(&merge_send_handle);
 	NSCP_Sender_Init(&merge_send_handle);
 	HAL_Delay(10000);
-	merge_send_handle.data = 0x555;
+	merge_send_handle.data = 0x0001;
 	OLED_WriteIn_16x8String(0, 0, 10, (unsigned char*)title1);
-	for (unsigned char i = 0; i < 4; i++) {
+	for (int i = 0; i < PACKS_NUM; i++) {
 		NSCP_Sender_Load_Data(&merge_send_handle);
 		NSCP_Sender_Wait_For_Trans_Ready_Sync(&merge_send_handle);
 		NSCP_Sender_Trans_Launch(&merge_send_handle);
@@ -920,16 +922,16 @@ NSCP_ConfigTypeDef merge_recv_handle = {
 		.pwm_slave_handle = &slav_conf,
 		.sda_handle = &gpio_conf
 };
-
+uint16_t data_cache_t[PACKS_NUM + 1];
 void Merge_Test_Recv()
 {
 	HAL_Delay(1000);
 	//datas
-	char title[6] = {0};
+	char title[] = "Wrong at %";
+	char title2[] = "Check Fin";
 	uint16_t tmp = 0x0000;
 	uint16_t cache = 0x0000;
-	unsigned char piv = 0;
-	
+	int piv = 0;
 	//init OLED
 	IIC1_Init(0, 0);
 	SetIIC_Comm_Mode(1);//Polling mode
@@ -942,16 +944,24 @@ void Merge_Test_Recv()
 	NSCP_Recv_Init(&merge_recv_handle);
 	NSCP_Recv_Start(&merge_recv_handle);
 	while(1) {
-		for (int i = 0; i < 1000; i++);
 		cache = NSCP_Recv_Get_Data(&merge_recv_handle);
-		if (cache != tmp) {
+		if (tmp != cache) {
 			tmp = cache;
-			piv++;
-			piv %= 4;
+			data_cache_t[piv++] = tmp;
 		}
-		TransI16_2_Str(tmp, title);
-		OLED_WriteIn_16x8String(0, piv, 6, (unsigned char*)title);
+		if (piv >= PACKS_NUM) break;
+		for (int i = 0; i < 100; i++);
 	}
+	tmp = 0x0001;
+	for (int i = 0; i < PACKS_NUM; i++) {
+		if (tmp != data_cache_t[i]) {
+			title[9] = i + '0';
+			OLED_WriteIn_16x8String(0, 0, 10, (unsigned char*)title);
+			break;
+		} else tmp++;
+	}
+	OLED_WriteIn_16x8String(0, 1, 9, (unsigned char*)title2);
+	while(1);
 }
 
 //---------------------merge test end------------------------------

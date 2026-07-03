@@ -5,5 +5,10 @@
 
 #define START_UP_API_EN
 #define UTILS_API_EN
+#define ATOM_VAR_API_EN
+#define IIC_API_EN
+#define OLED_API_EN
+//#define FREE_RTOS_EN
+#define OLED_TEST
 
 #endif

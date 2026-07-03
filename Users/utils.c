@@ -3,9 +3,7 @@
 
 void Standard_process()
 {
-	//HAL_Init
-	HAL_Init();
-	//clock init
+	//clock init & HAL_Init
 	SystemClock_Config();
 }
 

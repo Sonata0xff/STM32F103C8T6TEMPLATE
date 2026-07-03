@@ -21,6 +21,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_it.h"
+#include "FreeRTOSConfig.h"
+#include "bsp_config.h"
    
 /** @addtogroup STM32F1xx_HAL_Examples
   * @{
@@ -108,9 +110,9 @@ void UsageFault_Handler(void)
   * @param  None
   * @retval None
   */
-void SVC_Handler(void)
+/*void SVC_Handler(void)
 {
-}
+}*/
 
 /**
   * @brief  This function handles Debug Monitor exception.
@@ -126,9 +128,9 @@ void DebugMon_Handler(void)
   * @param  None
   * @retval None
   */
-void PendSV_Handler(void)
+/*void PendSV_Handler(void)
 {
-}
+}*/
 
 /**
   * @brief  This function handles SysTick Handler.
@@ -138,6 +140,9 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+	#ifdef FREE_RTOS_EN
+	xPortSysTickHandler();
+	#endif
 }
 
 /******************************************************************************/

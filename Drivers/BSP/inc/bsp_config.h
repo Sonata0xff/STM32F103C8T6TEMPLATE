@@ -15,6 +15,7 @@
 //#define MPU_API_EN
 #define NSCP_API_EN
 #define DELAY_COUNTER_API_EN
+#define ESC_API_EN
 //#define NRF2401_TEST
 //#define NRF2401_RECEIVER_TEST
 //#define NRF2401_SENDER_TEST
@@ -22,8 +23,9 @@
 //#define NRF_COMM_CASE1_RECV
 //#define TIM_COUNTER_TEST
 //#define TIM_COUNTER_BASE_CASE1
-#define OLED_TEST
+//#define OLED_TEST
 //#define MPU_TEST
-#define NSCP_TEST
+//#define NSCP_TEST
 //#define DELAY_COUNTER_TEST
+#define ESC_TEST
 #endif

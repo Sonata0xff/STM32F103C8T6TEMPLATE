@@ -122,4 +122,17 @@ void DC_Repeat_Count_Test4(); // nscp fake env test1
 void DC_Repeat_Count_Test5(); // nscp fake env test2
 #endif
 //----------------------------------------------------
+/*
+test case : esc
+*/
+#ifdef ESC_TEST
+#include "stm32f1xx.h"                  // Device header
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_conf.h"
+#include "esc.h"
+
+
+
+#endif
+//----------------------------------------------------
 #endif

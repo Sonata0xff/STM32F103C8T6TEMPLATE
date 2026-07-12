@@ -12,6 +12,6 @@ int main()
 	Standard_process();
 
 	//work code
-	Merge_Test_Recv();
+	
 	return 0;
 }

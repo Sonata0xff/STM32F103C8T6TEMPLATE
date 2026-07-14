@@ -12,6 +12,6 @@ int main()
 	Standard_process();
 
 	//work code
-	
+	ESC_Test_Init();
 	return 0;
 }

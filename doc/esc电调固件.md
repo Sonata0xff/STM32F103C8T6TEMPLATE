@@ -13,5 +13,10 @@
                 |                            |
                 |----------滤波---------------| 
 
+TIM1 CH1:PWM -- u
+TIM1 CH2:PWM -- v
+TIM1 CH3:PWM -- w
+TIM1 CH4:timer base
+
 通信：中断负责
 nscp -> 解码 -> 油门值

@@ -17,6 +17,8 @@ void ESC_APP_Init()
 //---------------public func---------------
 ESC_ERROR ESC_APP_Main()
 {
+	ESC_APP_On();
+	ESC_APP_Init();
 	return ESC_ERR_NERR;
 }
 

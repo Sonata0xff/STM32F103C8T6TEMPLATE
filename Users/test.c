@@ -1180,5 +1180,71 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
+//---------------------self oc test-------------------------------
+
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+{
+	__HAL_RCC_TIM1_CLK_ENABLE();
+	//NVIC Init
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+	HAL_NVIC_SetPriority(TIM_IT_CC4, 1, 1);
+	HAL_NVIC_EnableIRQ(TIM_IT_CC4);
+}
+
+TIM_HandleTypeDef oc_config = {
+	.Instance = TIM1,
+	.Init.Prescaler = 72 - 1, //1Mhz, 1us
+	.Init.CounterMode = TIM_COUNTERMODE_UP,
+	.Init.Period = 2000 - 1, // 2ms
+	.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1
+};
+
+TIM_OC_InitTypeDef occ_config = {
+	.OCMode = TIM_OCMODE_TIMING,
+	.Pulse = 1000 - 1, //1ms
+};
+
+void TIM1_CC_IRQHandler()
+{
+	HAL_TIM_IRQHandler(&oc_config);
+}
+
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	if (occ_config.Pulse == 999) htim->Instance->CCR4 = 2000 - 1;
+	else htim->Instance->CCR4 = 1000 - 1;
+}
+
+void Self_OC_Test()
+{
+	
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	
+	//timer init
+	HAL_TIM_OC_Init(&oc_config);
+	HAL_TIM_OC_ConfigChannel(&oc_config, &occ_config, TIM_CHANNEL_4);
+	oc_config.Instance->CCMR2 &= (~TIM_CCMR2_OC4PE);//disable preload
+	//run
+	HAL_TIM_OC_Start_IT(&oc_config, TIM_CHANNEL_4);
+	//stuck
+	while(1);
+}
+//---------------------self oc test end-------------------------------
+void ESC_Test_Init()
+{
+	//ESC_APP_Main();
+	Self_OC_Test();
+}
+
 #endif
 //------------------------esc test end----------------------------

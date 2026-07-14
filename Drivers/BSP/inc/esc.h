@@ -8,6 +8,8 @@
 #include "stm32f1xx_hal.h"
 #include "NSCP.h"
 
+#define LOW_STAB_PRD 10 // 0.5 * 10 = 5ms
+
 typedef enum {
 	ESC_STATUS_IDLE,
 	ESC_STATIS_LOW_TRANS,
@@ -18,6 +20,13 @@ typedef enum {
 typedef enum {
 	ESC_ERR_NERR,
 } ESC_ERROR;
+
+typedef struct {
+	//usr config
+	
+	//sys config
+	
+} ESC_ConfigTypeDef;
 
 //esc app enterance.
 ESC_ERROR ESC_APP_Main();

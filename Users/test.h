@@ -131,7 +131,7 @@ test case : esc
 #include "stm32f1xx_hal_conf.h"
 #include "esc.h"
 
-
+void ESC_Test_Init();
 
 #endif
 //----------------------------------------------------

@@ -1180,15 +1180,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-//---------------------self oc test-------------------------------
+//---------------------self test-------------------------------
 
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+void HAL_TIM_OC_MspInit(TIM_HandleTypeDef *htim)
 {
 	__HAL_RCC_TIM1_CLK_ENABLE();
 	//NVIC Init
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-	HAL_NVIC_SetPriority(TIM_IT_CC4, 1, 1);
-	HAL_NVIC_EnableIRQ(TIM_IT_CC4);
+	HAL_NVIC_SetPriority(TIM1_CC_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
+}
+
+void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
+{
+	__HAL_RCC_TIM1_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	GPIO_InitTypeDef pwm_port = {
+		.Pin = GPIO_PIN_8,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	GPIO_InitTypeDef pwm_n_port = {
+		.Pin = GPIO_PIN_13,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &pwm_port);
+	HAL_GPIO_Init(GPIOB, &pwm_n_port);
 }
 
 TIM_HandleTypeDef oc_config = {
@@ -1204,16 +1225,31 @@ TIM_OC_InitTypeDef occ_config = {
 	.Pulse = 1000 - 1, //1ms
 };
 
+TIM_OC_InitTypeDef pwm_config = {
+	.OCMode = TIM_OCMODE_PWM1,
+	.Pulse = 2000 - 1, //1ms
+	.OCIdleState = TIM_OCIDLESTATE_RESET,
+	.OCNIdleState = TIM_OCNIDLESTATE_RESET,
+	.OCPolarity = TIM_OCPOLARITY_HIGH,
+	.OCNPolarity = TIM_OCNPOLARITY_HIGH
+};
+
 void TIM1_CC_IRQHandler()
 {
 	HAL_TIM_IRQHandler(&oc_config);
 }
+
+unsigned char flag = 0;
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 	if (occ_config.Pulse == 999) htim->Instance->CCR4 = 2000 - 1;
 	else htim->Instance->CCR4 = 1000 - 1;
+	occ_config.Pulse = htim->Instance->CCR4;
+	/*if (flag == 0) oc_config.Instance->CCER &= ~(TIM_CCER_CC1E);
+	else oc_config.Instance->CCER |= TIM_CCER_CC1E;
+	flag = 1 - flag;*/
 }
 
 void Self_OC_Test()
@@ -1239,11 +1275,54 @@ void Self_OC_Test()
 	//stuck
 	while(1);
 }
-//---------------------self oc test end-------------------------------
+
+void Self_Pwm_Test()
+{
+	//timer init
+	HAL_TIM_PWM_Init(&oc_config);
+	HAL_TIM_PWM_ConfigChannel(&oc_config, &pwm_config, TIM_CHANNEL_1);
+	oc_config.Instance->CCMR1 &= ~(TIM_CCMR1_OC1PE);//disable preload
+	oc_config.Instance->CCER |= TIM_CCER_CC1NE;//open N
+	HAL_TIM_PWM_Start(&oc_config, TIM_CHANNEL_1);
+	//stuck
+	while(1);
+}
+
+void Self_Period_Change_Test()
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef gpio_conf = {
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_OUTPUT_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_FREQ_HIGH
+	};
+	HAL_GPIO_Init(GPIOA, &gpio_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//pwm init
+	//HAL_TIM_PWM_Init(&oc_config);
+	//HAL_TIM_PWM_ConfigChannel(&oc_config, &pwm_config, TIM_CHANNEL_1);
+	//oc_config.Instance->CCMR1 &= ~(TIM_CCMR1_OC1PE);//disable preload
+	//oc_config.Instance->CCER &= ~(TIM_CCER_CC1E);
+	//oc_config.Instance->CCER |= TIM_CCER_CC1NE;//open N
+	//HAL_TIM_PWM_Start(&oc_config, TIM_CHANNEL_1);
+	//OC_Init
+	HAL_TIM_OC_Init(&oc_config);
+	HAL_TIM_OC_ConfigChannel(&oc_config, &occ_config, TIM_CHANNEL_4);
+	oc_config.Instance->CCMR2 &= (~TIM_CCMR2_OC4PE);//disable preload
+	HAL_TIM_OC_Start_IT(&oc_config, TIM_CHANNEL_4);
+	//stuck
+	while(1);
+}
+
+//---------------------self test end-------------------------------
 void ESC_Test_Init()
 {
 	//ESC_APP_Main();
 	Self_OC_Test();
+	//Self_Pwm_Test();
+	//Self_Period_Change_Test();
 }
 
 #endif

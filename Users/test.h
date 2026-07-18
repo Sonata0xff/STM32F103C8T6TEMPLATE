@@ -86,6 +86,7 @@ test case : NSCP
 #include "utils.h"
 #include "NSCP.h"
 #include "OLED.h"
+#include "IIC.h"
 void NSCP_Send_Init_Test();
 void NSCP_Send_Load_Test();
 void NSCP_Send_Full_Send_Test();

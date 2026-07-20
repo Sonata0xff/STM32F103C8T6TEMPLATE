@@ -60,12 +60,18 @@ void TIM1_CC_IRQHandler()
 {
 	HAL_TIM_IRQHandler(&esc_config.out_tim_conf);
 }
-
-unsigned char tmp_motor_status = 0;
+uint32_t six_map[6] = {0x0140, 0x0104, 0x0014, 0x0410, 0x0401, 0x0041};
+uint16_t tmp_tik_status = LOW_STAB_PRD - 1;
+unsigned char tmp_motor_status = 5;
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	//wait for coding ...
-	
+	//check the period if is done.
+	tmp_tik_status = (tmp_tik_status + 1) % six_period;
+	if (tmp_tik_status != 0) return;
+	tmp_motor_status = (tmp_motor_status + 1) % 6;
+	esc_config.out_tim_conf.Instance->CCER = six_map[tmp_motor_status];
+	if (tmp_motor_status != 0) return;
+	six_period = six_period_cache;
 }
 //power start running func.
 void ESC_APP_On()
@@ -139,7 +145,7 @@ void ESC_APP_Init()
 													 &esc_config.out_oc_conf,
 													 TIM_CHANNEL_4);
 	esc_config.out_tim_conf.Instance->CCMR2 &= (~TIM_CCMR2_OC4PE);
-	HAL_TIM_OC_Start_IT(&esc_config.out_tim_conf, TIM_CHANNEL_4);
+	//HAL_TIM_OC_Start_IT(&esc_config.out_tim_conf, TIM_CHANNEL_4);
 	
 	
 	//nscp init & start
@@ -154,7 +160,11 @@ void ESC_APP_Init()
 void ESC_APP_Trans_To_Ready()
 {
 	esc_status = ESC_STATIS_LOW_TRANS;
-	//wait for coding ...
+	//start the tik
+	HAL_TIM_OC_Start_IT(&esc_config.out_tim_conf, TIM_CHANNEL_4);
+	//fake wait
+	for(int i = 1; i < 10000; i++);
+	//coding ...
 	esc_status = ESC_STATUS_LOW_STAB;
 	#ifdef ESC_DEBUG_MODE
 	ESC_ERROR check_result = ESC_TRANS_LOW_STAB_Check_func();
@@ -171,6 +181,7 @@ ESC_ERROR ESC_APP_Main()
 	//stablize the motor speed.
 	ESC_APP_Trans_To_Ready();
 	//coding ...
+	while(1);
 	return ESC_ERR_NERR;
 }
 

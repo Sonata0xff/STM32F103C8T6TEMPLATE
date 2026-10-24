@@ -15,8 +15,17 @@
 
 TIM1 CH3:PWM -- u: HHLLLL ~u: LLLHHL
 TIM1 CH2:PWM -- v: LLHHLL ~v: HLLLLH
-TIM1 CH1:PWM -- w LLLLHH ~w LHHLLL
+TIM1 CH1:PWM -- w: LLLLHH ~w: LHHLLL
 TIM1 CH4:timer base
 
-通信：中断负责
+通信：中断负责s
 nscp -> 解码 -> 油门值
+
+
+
+0140 03C0
+0104 030C
+0014 003C
+0410 0C30
+0401 0C03
+0041 00C3

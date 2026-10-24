@@ -7,7 +7,7 @@ ESC_ConfigTypeDef esc_config;
 AtomVarType period_cache_lock;
 uint16_t six_period_cache = LOW_STAB_PRD; //usr change, sys read, default is 5ms
 uint16_t six_period = LOW_STAB_PRD; //sys change, sys read, default is 5ms
-
+uint16_t pwm_high_prd = ESC_INI_PWM_PRD;//sys change, sys read
 //---------------private func--------------
 //nscp init func
 void ESC_NSCP_Init()
@@ -60,7 +60,7 @@ void TIM1_CC_IRQHandler()
 {
 	HAL_TIM_IRQHandler(&esc_config.out_tim_conf);
 }
-uint32_t six_map[6] = {0x0140, 0x0104, 0x0014, 0x0410, 0x0401, 0x0041};
+uint32_t six_map[6] = {0x03C0, 0x030C, 0x003C, 0x0C30, 0x0C03, 0x00C3};
 uint16_t tmp_tik_status = LOW_STAB_PRD - 1;
 unsigned char tmp_motor_status = 5;
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
@@ -72,6 +72,9 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 	esc_config.out_tim_conf.Instance->CCER = six_map[tmp_motor_status];
 	if (tmp_motor_status != 0) return;
 	six_period = six_period_cache;
+	TIM1->CCR1 = ESC_PRD - pwm_high_prd - 1;
+	TIM1->CCR2 = ESC_PRD - pwm_high_prd - 1;
+	TIM1->CCR3 = ESC_PRD - pwm_high_prd - 1;
 }
 //power start running func.
 void ESC_APP_On()
@@ -102,10 +105,10 @@ void ESC_APP_On()
 	esc_config.out_tim_conf.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	
 	esc_config.out_oc_conf.OCMode = TIM_OCMODE_TIMING;
-	esc_config.out_oc_conf.Pulse = ESC_PRD - 5;//0.5ms 6 period
+	esc_config.out_oc_conf.Pulse = ESC_PRD - 1;//0.5ms 6 period
 	
 	esc_config.out_pwm_config.OCMode = TIM_OCMODE_PWM1;
-	esc_config.out_pwm_config.Pulse = ESC_INI_PWM_PRD - 1; //1/2v = 5v 
+	esc_config.out_pwm_config.Pulse = ESC_PRD - ESC_INI_PWM_PRD - 1; //1/2v = 5v 
 	esc_config.out_pwm_config.OCIdleState = TIM_OCIDLESTATE_RESET;
 	esc_config.out_pwm_config.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 	esc_config.out_pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;

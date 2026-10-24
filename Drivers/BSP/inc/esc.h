@@ -8,9 +8,9 @@
 #include "stm32f1xx_hal.h"
 #include "NSCP.h"
 
-#define LOW_STAB_PRD 10 // 0.5 * 10 = 5ms
-#define ESC_PRD 500 //0.5ms
-#define ESC_INI_PWM_PRD 250 // 1/2v = 5v 
+#define LOW_STAB_PRD 476 // 0.5 * 10 = 5ms
+#define ESC_PRD 42 //0.5ms
+#define ESC_INI_PWM_PRD 5 // 1/2v = 5v 
 #define ESC_NSCP_ONE_PRD 4 //2us
 #define ESC_NSCP_PRD 5 //2.5us
 #define ESC_NSCP_SAMP_PRD 2//1us

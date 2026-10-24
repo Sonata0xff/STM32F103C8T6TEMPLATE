@@ -1185,16 +1185,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 //---------------------self test-------------------------------
 
-void HAL_TIM_OC_MspInit(TIM_HandleTypeDef *htim)
+/*void HAL_TIM_OC_MspInit(TIM_HandleTypeDef *htim)
 {
 	__HAL_RCC_TIM1_CLK_ENABLE();
 	//NVIC Init
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(TIM1_CC_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
-}
+}*/
 
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
+/*void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 {
 	__HAL_RCC_TIM1_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -1217,7 +1217,7 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(TIM1_CC_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
-}
+}*/
 
 TIM_HandleTypeDef oc_config = {
 	.Instance = TIM1,
@@ -1241,15 +1241,15 @@ TIM_OC_InitTypeDef pwm_config = {
 	.OCNPolarity = TIM_OCNPOLARITY_HIGH
 };
 
-void TIM1_CC_IRQHandler()
+/*void TIM1_CC_IRQHandler()
 {
 	HAL_TIM_IRQHandler(&oc_config);
-}
+}*/
 
 unsigned char flag = 0;
 unsigned char tag_time = 0;
 
-void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+/*void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 	if (tag_time < 3) {
@@ -1259,7 +1259,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 	if (flag == 0) oc_config.Instance->CCER &= ~(TIM_CCER_CC1E);
 	else oc_config.Instance->CCER |= TIM_CCER_CC1E;
 	flag = 1 - flag;
-}
+}*/
 
 void Self_OC_Test()
 {
@@ -1323,14 +1323,34 @@ void Self_Period_Change_Test()
 	while(1);
 }
 
+TIM_HandleTypeDef ref_tim1_conf = {
+	.Instance = TIM1,
+	.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE,
+	.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1,
+	.Init.CounterMode = TIM_COUNTERMODE_UP,
+	.Init.Period = ,
+	.Init.Prescaler = 72 -1,//1Mhz
+	.Init.RepetitionCounter = ,
+	.hdma = ,
+};
+
+void Self_Timer_DMA_Re_Test()
+{
+	HAL_TIM_Base_Init();
+}
+
 //---------------------self test end-------------------------------
 void ESC_Test_Init()
 {
 	//ESC_APP_Main();
 	//Self_OC_Test();
 	//Self_Pwm_Test();
-	Self_Period_Change_Test();
+	//Self_Period_Change_Test();
+	Self_Timer_DMA_Re_Test();
+	//ESC_APP_Main();
 }
+
+
 
 #endif
 //------------------------esc test end----------------------------

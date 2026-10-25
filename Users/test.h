@@ -131,7 +131,9 @@ test case : esc
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_conf.h"
 #include "esc.h"
-
+void ECS_DMAPeriodElapsedCplt(struct __DMA_HandleTypeDef * hdma);
+HAL_StatusTypeDef ECS_TIM_Base_Start_DMA_T(TIM_HandleTypeDef *htim, const uint32_t *pData, uint16_t Length);
+HAL_StatusTypeDef ECS_TIM_Base_Stop_DMA_T(TIM_HandleTypeDef *htim);
 void ESC_Test_Init();
 
 #endif

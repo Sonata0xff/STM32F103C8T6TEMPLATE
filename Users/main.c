@@ -12,7 +12,7 @@ int main()
 	Standard_process();
 
 	//work code
-	//ESC_Test_Init();
+	ESC_Test_Init();
 	/*__HAL_RCC_GPIOC_CLK_ENABLE();
 	GPIO_InitTypeDef led_conf = {
 		.Pin = GPIO_PIN_13,

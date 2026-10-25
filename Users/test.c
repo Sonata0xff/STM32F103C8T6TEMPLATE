@@ -1323,20 +1323,177 @@ void Self_Period_Change_Test()
 	while(1);
 }
 
+
+#define SI_PERIOD 1000 //1ms
+#define RE_PERIOD 20 //20ms
+
+DMA_HandleTypeDef ref_dma1_conf = {
+	.Instance = DMA1_Channel5,
+	.Init.Direction = DMA_MEMORY_TO_PERIPH,
+	.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD,
+	.Init.MemInc = DMA_MINC_ENABLE,
+	.Init.Mode = DMA_CIRCULAR,
+	.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD,
+	.Init.PeriphInc = DMA_PINC_DISABLE,
+	.Init.Priority = DMA_PRIORITY_HIGH
+};
+
+void ECS_DMAPeriodElapsedCplt(struct __DMA_HandleTypeDef * hdma)
+{
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_15);
+}
+
+HAL_StatusTypeDef ECS_TIM_Base_Start_DMA_T(TIM_HandleTypeDef *htim, const uint32_t *pData, uint16_t Length)
+{
+	uint32_t tmpsmcr;
+
+  /* Check the parameters */
+  assert_param(IS_TIM_DMA_INSTANCE(htim->Instance));
+
+  /* Set the TIM state */
+  if (htim->State == HAL_TIM_STATE_BUSY)
+  {
+    return HAL_BUSY;
+  }
+  else if (htim->State == HAL_TIM_STATE_READY)
+  {
+    if ((pData == NULL) || (Length == 0U))
+    {
+      return HAL_ERROR;
+    }
+    else
+    {
+      htim->State = HAL_TIM_STATE_BUSY;
+    }
+  }
+  else
+  {
+    return HAL_ERROR;
+  }
+
+  /* Set the DMA Period elapsed callbacks */
+  htim->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = ECS_DMAPeriodElapsedCplt;
+  htim->hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = NULL;
+
+  /* Set the DMA error callback */
+  htim->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError ;
+
+  /* Enable the DMA channel */
+  if (HAL_DMA_Start_IT(htim->hdma[TIM_DMA_ID_UPDATE], (uint32_t)pData, (uint32_t)&GPIOA->ODR,
+                       Length) != HAL_OK)
+  {
+		__HAL_DMA_DISABLE_IT(htim->hdma[TIM_DMA_ID_UPDATE], DMA_IT_HT);
+    /* Return error status */
+    return HAL_ERROR;
+  }
+
+  /* Enable the TIM Update DMA request */
+  __HAL_TIM_ENABLE_DMA(htim, TIM_DMA_UPDATE);
+
+  /* Enable the Peripheral, except in trigger mode where enable is automatically done with trigger */
+  if (IS_TIM_SLAVE_INSTANCE(htim->Instance))
+  {
+    tmpsmcr = htim->Instance->SMCR & TIM_SMCR_SMS;
+    if (!IS_TIM_SLAVEMODE_TRIGGER_ENABLED(tmpsmcr))
+    {
+      __HAL_TIM_ENABLE(htim);
+    }
+  }
+  else
+  {
+    __HAL_TIM_ENABLE(htim);
+  }
+
+  /* Return function status */
+  return HAL_OK;
+}
+
+HAL_StatusTypeDef ECS_TIM_Base_Stop_DMA_T(TIM_HandleTypeDef *htim)
+{
+	/* Check the parameters */
+  assert_param(IS_TIM_DMA_INSTANCE(htim->Instance));
+
+  /* Disable the TIM Update DMA request */
+  __HAL_TIM_DISABLE_DMA(htim, TIM_DMA_UPDATE);
+
+  (void)HAL_DMA_Abort_IT(htim->hdma[TIM_DMA_ID_UPDATE]);
+
+  /* Disable the Peripheral */
+  __HAL_TIM_DISABLE(htim);
+
+  /* Set the TIM state */
+  htim->State = HAL_TIM_STATE_READY;
+
+  /* Return function status */
+  return HAL_OK;
+}
+
 TIM_HandleTypeDef ref_tim1_conf = {
 	.Instance = TIM1,
 	.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE,
 	.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1,
 	.Init.CounterMode = TIM_COUNTERMODE_UP,
-	.Init.Period = ,
-	.Init.Prescaler = 72 -1,//1Mhz
-	.Init.RepetitionCounter = ,
-	.hdma = ,
+	.Init.Period = SI_PERIOD - 1,//1ms
+	.Init.Prescaler = 72 -1,//1Mhz, 1us
+	.Init.RepetitionCounter = RE_PERIOD - 1,//20ms dma move period
+	.hdma[TIM_DMA_ID_UPDATE] = &ref_dma1_conf
+};
+/*
+PA12 for pwm mock
+PB15 for period record
+*/
+GPIO_InitTypeDef gpio_a12_conf = {
+	.Mode = GPIO_MODE_OUTPUT_PP,
+	.Pin = GPIO_PIN_12,
+	.Speed = GPIO_SPEED_FREQ_HIGH
+};
+
+GPIO_InitTypeDef gpio_b15_conf = {
+	.Mode = GPIO_MODE_OUTPUT_PP,
+	.Pin = GPIO_PIN_15,
+	.Speed = GPIO_SPEED_FREQ_HIGH
+};
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+{
+	//gpio init
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	HAL_GPIO_Init(GPIOA, &gpio_a12_conf);
+	HAL_GPIO_Init(GPIOB, &gpio_b15_conf);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
+	
+	//dma init
+	__HAL_RCC_DMA1_CLK_ENABLE();
+	HAL_DMA_Init(&ref_dma1_conf);
+	__HAL_LINKDMA((&ref_tim1_conf), hdma[TIM_DMA_ID_UPDATE], ref_dma1_conf);
+	
+	//nvic init
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+	HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+}
+
+void DMA1_Channel5_IRQHandler()
+{
+	HAL_DMA_IRQHandler(&ref_dma1_conf);
+}
+
+uint16_t move_array[6] = {
+	0x1000,
+	0x0000,
+	0x1000,
+	0x0000,
+	0x1000,
+	0x0000,
 };
 
 void Self_Timer_DMA_Re_Test()
 {
-	HAL_TIM_Base_Init();
+	__HAL_RCC_TIM1_CLK_ENABLE();
+	HAL_TIM_Base_Init(&ref_tim1_conf);
+	ECS_TIM_Base_Start_DMA_T(&ref_tim1_conf, (uint32_t*)move_array, 6);
+	while(1);
 }
 
 //---------------------self test end-------------------------------

@@ -16,7 +16,7 @@
 TIM1 CH3:PWM -- u: HHLLLL ~u: LLLHHL
 TIM1 CH2:PWM -- v: LLHHLL ~v: HLLLLH
 TIM1 CH1:PWM -- w: LLLLHH ~w: LHHLLL
-TIM1 CH4:timer base
+TIM1 repeat counter+dma：节拍器
 
 通信：中断负责s
 nscp -> 解码 -> 油门值

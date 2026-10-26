@@ -8,9 +8,9 @@
 #include "stm32f1xx_hal.h"
 #include "NSCP.h"
 
-#define LOW_STAB_PRD 476 // 0.5 * 10 = 5ms
-#define ESC_PRD 42 //0.5ms
-#define ESC_INI_PWM_PRD 5 // 1/2v = 5v 
+#define LOW_STAB_PRD 476 // 20ms
+#define ESC_PRD 42 //42us
+#define ESC_INI_PWM_PRD 5 // 5~8us
 #define ESC_NSCP_ONE_PRD 4 //2us
 #define ESC_NSCP_PRD 5 //2.5us
 #define ESC_NSCP_SAMP_PRD 2//1us
@@ -36,10 +36,14 @@ typedef struct {
 	GPIO_InitTypeDef nscp_gpio_conf;
 	TIM_SlaveConfigTypeDef nscp_slav_conf;
 	TIM_HandleTypeDef out_tim_conf;
-	TIM_OC_InitTypeDef out_oc_conf;
+	DMA_HandleTypeDef out_dma_conf;
 	TIM_OC_InitTypeDef out_pwm_config;
 } ESC_ConfigTypeDef;
 
+//inner func
+void HAL_ECS_DMAPeriodElapsedCplt(struct __DMA_HandleTypeDef * hdma);
+HAL_StatusTypeDef HAL_ECS_TIM_Base_Start_DMA(TIM_HandleTypeDef *htim, const uint32_t *pData, uint16_t Length);
+HAL_StatusTypeDef HAL_ECS_TIM_Base_Stop_DMA(TIM_HandleTypeDef *htim);
 //esc app enterance.
 ESC_ERROR ESC_APP_Main();
 

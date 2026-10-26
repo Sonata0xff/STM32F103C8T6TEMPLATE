@@ -15,7 +15,7 @@
 //#define MPU_API_EN
 #define NSCP_API_EN
 #define DELAY_COUNTER_API_EN
-//#define ESC_API_EN
+#define ESC_API_EN
 //#define NRF2401_TEST
 //#define NRF2401_RECEIVER_TEST
 //#define NRF2401_SENDER_TEST

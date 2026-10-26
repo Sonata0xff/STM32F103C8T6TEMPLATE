@@ -1432,7 +1432,6 @@ HAL_StatusTypeDef ECS_TIM_Base_Stop_DMA_T(TIM_HandleTypeDef *htim)
 
 TIM_HandleTypeDef ref_tim1_conf = {
 	.Instance = TIM1,
-	.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE,
 	.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1,
 	.Init.CounterMode = TIM_COUNTERMODE_UP,
 	.Init.Period = SI_PERIOD - 1,//1ms
@@ -1455,7 +1454,7 @@ GPIO_InitTypeDef gpio_b15_conf = {
 	.Pin = GPIO_PIN_15,
 	.Speed = GPIO_SPEED_FREQ_HIGH
 };
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+/*void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 {
 	//gpio init
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -1474,11 +1473,11 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
-}
+}*/
 
 int rounds = 1;
 
-void DMA1_Channel5_IRQHandler()
+/*void DMA1_Channel5_IRQHandler()
 {
 	si_prd += 1000;
 	re_prd += 1;
@@ -1486,7 +1485,7 @@ void DMA1_Channel5_IRQHandler()
 	TIM1->RCR = re_prd - 1;
 	rounds += 1;
 	HAL_DMA_IRQHandler(&ref_dma1_conf);
-}
+}*/
 
 uint16_t move_array[6] = {
 	0x1000,
@@ -1510,12 +1509,11 @@ void Self_Timer_DMA_Re_Test()
 //---------------------self test end-------------------------------
 void ESC_Test_Init()
 {
-	//ESC_APP_Main();
 	//Self_OC_Test();
 	//Self_Pwm_Test();
 	//Self_Period_Change_Test();
-	Self_Timer_DMA_Re_Test();
-	//ESC_APP_Main();
+	//Self_Timer_DMA_Re_Test();
+	ESC_APP_Main();
 }
 
 

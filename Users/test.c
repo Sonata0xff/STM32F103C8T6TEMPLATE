@@ -1325,7 +1325,9 @@ void Self_Period_Change_Test()
 
 
 #define SI_PERIOD 1000 //1ms
-#define RE_PERIOD 20 //20ms
+#define RE_PERIOD 2 //2ms
+uint32_t si_prd = SI_PERIOD;
+uint32_t re_prd = RE_PERIOD;
 
 DMA_HandleTypeDef ref_dma1_conf = {
 	.Instance = DMA1_Channel5,
@@ -1474,8 +1476,15 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 	HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 }
 
+int rounds = 1;
+
 void DMA1_Channel5_IRQHandler()
 {
+	si_prd += 1000;
+	re_prd += 1;
+	TIM1->ARR = si_prd - 1;
+	TIM1->RCR = re_prd - 1;
+	rounds += 1;
 	HAL_DMA_IRQHandler(&ref_dma1_conf);
 }
 
@@ -1493,6 +1502,8 @@ void Self_Timer_DMA_Re_Test()
 	__HAL_RCC_TIM1_CLK_ENABLE();
 	HAL_TIM_Base_Init(&ref_tim1_conf);
 	ECS_TIM_Base_Start_DMA_T(&ref_tim1_conf, (uint32_t*)move_array, 6);
+	while(rounds < 4);
+	ECS_TIM_Base_Stop_DMA_T(&ref_tim1_conf);
 	while(1);
 }
 

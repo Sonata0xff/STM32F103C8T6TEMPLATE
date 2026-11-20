@@ -5,7 +5,7 @@ NSCP_ConfigTypeDef recv_handle;
 ESC_Status esc_status = ESC_STATUS_ON;
 ESC_ConfigTypeDef esc_config;
 AtomVarType period_lock;
-uint16_t six_period = LOW_STAB_PRD; //usr change, sys read, default is 20ms
+uint16_t six_period = LOW_STAB_PRD; //usr change, sys read, default is 10ms
 uint16_t pwm_high_prd = ESC_INI_PWM_PRD;//sys change, sys read, default is 8us of 42us
 //---------------private func--------------
 //nscp init func
@@ -65,13 +65,13 @@ void DMA1_Channel5_IRQHandler()
 {
 	HAL_DMA_IRQHandler(&esc_config.out_dma_conf);
 }
-uint16_t six_map[6] = {0x03C0, 0x030C, 0x003C, 0x0C30, 0x0C03, 0x00C3};
+uint16_t six_map[6] = {0x0180, 0x0108, 0x0018, 0x0810, 0x0801, 0x0081};
 void HAL_ECS_DMAPeriodElapsedCplt(struct __DMA_HandleTypeDef * hdma)
 {
 	TIM1->RCR = six_period - 1;
-	esc_config.out_tim_conf.Instance->CCR1 = ESC_PRD - pwm_high_prd - 1;
-	esc_config.out_tim_conf.Instance->CCR2 = ESC_PRD - pwm_high_prd - 1;
-	esc_config.out_tim_conf.Instance->CCR3 = ESC_PRD - pwm_high_prd - 1;
+	esc_config.out_tim_conf.Instance->CCR1 = pwm_high_prd - 1;
+	esc_config.out_tim_conf.Instance->CCR2 = pwm_high_prd - 1;
+	esc_config.out_tim_conf.Instance->CCR3 = pwm_high_prd - 1;
 }
 
 HAL_StatusTypeDef HAL_ECS_TIM_Base_Start_DMA(TIM_HandleTypeDef *htim, const uint32_t *pData, uint16_t Length)
@@ -186,7 +186,7 @@ void ESC_APP_On()
 	esc_config.out_tim_conf.Init.CounterMode = TIM_COUNTERMODE_UP;
 	esc_config.out_tim_conf.Init.Period = ESC_PRD - 1;// 42us
 	esc_config.out_tim_conf.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	esc_config.out_tim_conf.Init.RepetitionCounter = LOW_STAB_PRD - 1; //20ms
+	esc_config.out_tim_conf.Init.RepetitionCounter = LOW_STAB_PRD - 1; //10ms
 	esc_config.out_tim_conf.hdma[TIM_DMA_ID_UPDATE] = &esc_config.out_dma_conf;
 	
 	esc_config.out_dma_conf.Instance = DMA1_Channel5;
@@ -200,7 +200,7 @@ void ESC_APP_On()
 	
 	
 	esc_config.out_pwm_config.OCMode = TIM_OCMODE_PWM1;
-	esc_config.out_pwm_config.Pulse = ESC_PRD - ESC_INI_PWM_PRD - 1; //8us
+	esc_config.out_pwm_config.Pulse = ESC_INI_PWM_PRD - 1; //8us
 	esc_config.out_pwm_config.OCIdleState = TIM_OCIDLESTATE_RESET;
 	esc_config.out_pwm_config.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 	esc_config.out_pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -213,6 +213,7 @@ void ESC_APP_Init()
 {
 	//esc output init
 	HAL_TIM_PWM_Init(&esc_config.out_tim_conf);
+	esc_config.out_tim_conf.Instance->BDTR |= TIM_BDTR_OSSR;
 	//esc output ch1 init & start -- pwm
 	HAL_TIM_PWM_ConfigChannel(&esc_config.out_tim_conf,
 															&esc_config.out_pwm_config,
